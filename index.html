@@ -35,7 +35,6 @@
     overflow-x: hidden;
   }
 
-  /* Grain overlay */
   body::before {
     content: '';
     position: fixed;
@@ -46,7 +45,6 @@
     z-index: 9999;
   }
 
-  /* Header */
   header {
     border-bottom: 1px solid var(--border);
     padding: 28px 48px;
@@ -82,14 +80,12 @@
     border-radius: 2px;
   }
 
-  /* Main layout */
   .studio {
     display: grid;
     grid-template-columns: 420px 1fr;
     min-height: calc(100vh - 85px);
   }
 
-  /* Control Panel */
   .panel {
     border-right: 1px solid var(--border);
     padding: 40px 36px;
@@ -100,6 +96,38 @@
     overflow-y: auto;
     max-height: calc(100vh - 85px);
   }
+
+  /* Mode toggle */
+  .mode-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .mode-btn {
+    background: transparent;
+    border: none;
+    padding: 12px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .mode-btn:first-child { border-right: 1px solid var(--border); }
+  .mode-btn .mode-icon { font-size: 18px; display: block; }
+  .mode-btn:hover { color: var(--parchment); background: rgba(154,176,204,0.05); }
+  .mode-btn.active { background: rgba(154,176,204,0.1); color: var(--gold); }
 
   .section-label {
     font-size: 9px;
@@ -119,7 +147,6 @@
     background: var(--border);
   }
 
-  /* API Key */
   .api-section {
     background: rgba(154,176,204,0.04);
     border: 1px solid var(--border);
@@ -127,14 +154,8 @@
     padding: 18px;
   }
 
-  .api-note {
-    font-size: 10px;
-    color: var(--muted);
-    line-height: 1.6;
-    margin-top: 8px;
-  }
+  .api-note { font-size: 10px; color: var(--muted); line-height: 1.6; margin-top: 8px; }
 
-  /* Inputs */
   label {
     display: block;
     font-size: 10px;
@@ -144,11 +165,7 @@
     margin-bottom: 8px;
   }
 
-  input[type="text"],
-  input[type="number"],
-  input[type="password"],
-  select,
-  textarea {
+  input[type="text"], input[type="number"], input[type="password"], select, textarea {
     width: 100%;
     background: rgba(255,255,255,0.04);
     border: 1px solid rgba(154,176,204,0.2);
@@ -169,41 +186,13 @@
 
   input[type="number"] { -moz-appearance: textfield; }
   input[type="number"]::-webkit-inner-spin-button { opacity: 0; }
+  textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
 
-  textarea {
-    resize: vertical;
-    min-height: 100px;
-    line-height: 1.6;
-  }
+  .size-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; }
+  .size-x { text-align: center; color: var(--gold-dim); font-size: 14px; padding-top: 12px; }
+  .size-hint { font-size: 10px; color: var(--muted); margin-top: 6px; text-align: center; }
 
-  /* Size inputs row */
-  .size-row {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 10px;
-    align-items: center;
-  }
-
-  .size-x {
-    text-align: center;
-    color: var(--gold-dim);
-    font-size: 14px;
-    padding-top: 12px;
-  }
-
-  .size-hint {
-    font-size: 10px;
-    color: var(--muted);
-    margin-top: 6px;
-    text-align: center;
-  }
-
-  /* DPI selector */
-  .dpi-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 8px;
-  }
+  .dpi-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
 
   .dpi-btn {
     background: transparent;
@@ -220,18 +209,9 @@
   }
 
   .dpi-btn:hover { border-color: var(--gold); color: var(--gold); }
-  .dpi-btn.active {
-    background: rgba(154,176,204,0.12);
-    border-color: var(--gold);
-    color: var(--gold);
-  }
+  .dpi-btn.active { background: rgba(154,176,204,0.12); border-color: var(--gold); color: var(--gold); }
 
-  /* Style presets */
-  .presets-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
+  .presets-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
   .preset-btn {
     background: transparent;
@@ -248,34 +228,12 @@
     line-height: 1.4;
   }
 
-  .preset-btn:hover {
-    border-color: var(--gold);
-    color: var(--parchment);
-    background: rgba(154,176,204,0.06);
-  }
+  .preset-btn:hover { border-color: var(--gold); color: var(--parchment); background: rgba(154,176,204,0.06); }
+  .preset-btn.active { border-color: var(--gold); background: rgba(154,176,204,0.1); color: var(--gold-light); }
+  .preset-btn .preset-name { font-weight: 500; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; display: block; margin-bottom: 2px; }
+  .preset-btn .preset-desc { font-size: 9px; opacity: 0.6; line-height: 1.3; }
 
-  .preset-btn.active {
-    border-color: var(--gold);
-    background: rgba(154,176,204,0.1);
-    color: var(--gold-light);
-  }
-
-  .preset-btn .preset-name {
-    font-weight: 500;
-    font-size: 10px;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    display: block;
-    margin-bottom: 2px;
-  }
-
-  .preset-btn .preset-desc {
-    font-size: 9px;
-    opacity: 0.6;
-    line-height: 1.3;
-  }
-
-  /* Image upload */
+  /* Upload zones */
   .upload-zone {
     border: 1px dashed rgba(154,176,204,0.3);
     border-radius: 4px;
@@ -286,260 +244,150 @@
     position: relative;
   }
 
-  .upload-zone:hover {
-    border-color: var(--gold);
-    background: rgba(154,176,204,0.04);
-  }
-
-  .upload-zone.has-image {
-    border-style: solid;
-    border-color: var(--gold-dim);
-    padding: 12px;
-  }
+  .upload-zone:hover { border-color: var(--gold); background: rgba(154,176,204,0.04); }
+  .upload-zone.has-image { border-style: solid; border-color: var(--gold-dim); padding: 12px; }
+  .upload-zone-large { padding: 36px 24px; }
 
   .upload-zone input[type="file"] {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    cursor: pointer;
-    width: 100%;
-    height: 100%;
-    border: none;
-    padding: 0;
+    position: absolute; inset: 0; opacity: 0; cursor: pointer;
+    width: 100%; height: 100%; border: none; padding: 0; background: transparent;
+  }
+
+  .upload-icon { font-size: 28px; margin-bottom: 8px; opacity: 0.5; }
+  .upload-icon-large { font-size: 40px; margin-bottom: 12px; opacity: 0.5; }
+  .upload-text { font-size: 11px; color: var(--muted); line-height: 1.5; }
+  .upload-preview { width: 100%; max-height: 160px; object-fit: contain; border-radius: 2px; display: none; }
+  .upload-filename { font-size: 10px; color: var(--gold-dim); margin-top: 6px; display: none; }
+
+  /* Upscale method toggle */
+  .method-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  .method-btn {
     background: transparent;
-  }
-
-  .upload-icon {
-    font-size: 28px;
-    margin-bottom: 8px;
-    opacity: 0.5;
-  }
-
-  .upload-text {
-    font-size: 11px;
+    border: 1px solid rgba(154,176,204,0.2);
+    border-radius: 3px;
     color: var(--muted);
-    line-height: 1.5;
-  }
-
-  .upload-preview {
-    width: 100%;
-    max-height: 120px;
-    object-fit: contain;
-    border-radius: 2px;
-    display: none;
-  }
-
-  .upload-filename {
+    font-family: 'Montserrat', sans-serif;
     font-size: 10px;
-    color: var(--gold-dim);
-    margin-top: 6px;
-    display: none;
+    letter-spacing: 0.1em;
+    padding: 12px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    line-height: 1.4;
+  }
+
+  .method-btn:hover { border-color: var(--gold); color: var(--parchment); background: rgba(154,176,204,0.06); }
+  .method-btn.active { border-color: var(--gold); background: rgba(154,176,204,0.1); color: var(--gold-light); }
+  .method-btn .method-name { font-weight: 500; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; display: block; margin-bottom: 4px; }
+  .method-btn .method-desc { font-size: 9px; opacity: 0.65; line-height: 1.4; }
+
+  .method-note {
+    font-size: 10px; color: var(--muted); line-height: 1.6;
+    padding: 10px 12px;
+    background: rgba(154,176,204,0.04);
+    border: 1px solid var(--border-subtle);
+    border-radius: 3px;
+    margin-top: 8px;
   }
 
   /* Generate button */
   .generate-btn {
     width: 100%;
     background: linear-gradient(135deg, #9ab0cc 0%, #3a5a7a 100%);
-    border: none;
-    border-radius: 3px;
+    border: none; border-radius: 3px;
     color: var(--ink);
     font-family: 'Cormorant Garamond', serif;
-    font-size: 18px;
-    font-weight: 400;
+    font-size: 18px; font-weight: 400;
     letter-spacing: 0.15em;
     padding: 16px;
     cursor: pointer;
     transition: all 0.3s;
-    position: relative;
-    overflow: hidden;
+    position: relative; overflow: hidden;
   }
 
   .generate-btn::before {
-    content: '';
-    position: absolute;
-    inset: 0;
+    content: ''; position: absolute; inset: 0;
     background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%);
-    opacity: 0;
-    transition: opacity 0.3s;
+    opacity: 0; transition: opacity 0.3s;
   }
 
   .generate-btn:hover::before { opacity: 1; }
   .generate-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(154,176,204,0.3); }
   .generate-btn:active { transform: translateY(0); }
-  .generate-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-  }
+  .generate-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
 
-  /* Canvas / Output area */
+  /* Canvas area */
   .canvas-area {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 40px;
-    position: relative;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 40px; position: relative;
     background: radial-gradient(ellipse at center, rgba(20,35,55,0.5) 0%, transparent 70%);
   }
 
-  /* Empty state */
-  .empty-state {
-    text-align: center;
-    opacity: 0.4;
-  }
+  .empty-state { text-align: center; opacity: 0.4; }
+  .empty-icon { font-size: 64px; margin-bottom: 20px; display: block; }
+  .empty-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 300; letter-spacing: 0.08em; margin-bottom: 10px; }
+  .empty-sub { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
 
-  .empty-icon {
-    font-size: 64px;
-    margin-bottom: 20px;
-    display: block;
-  }
-
-  .empty-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 22px;
-    font-weight: 300;
-    letter-spacing: 0.08em;
-    margin-bottom: 10px;
-  }
-
-  .empty-sub {
-    font-size: 11px;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-
-  /* Result */
-  .result-wrapper {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    gap: 24px;
-    width: 100%;
-  }
+  .result-wrapper { display: none; flex-direction: column; align-items: center; gap: 24px; width: 100%; }
 
   .result-frame {
     position: relative;
-    box-shadow:
-      0 0 0 1px rgba(154,176,204,0.3),
-      0 4px 24px rgba(0,0,0,0.6),
-      0 16px 48px rgba(0,0,0,0.4);
+    box-shadow: 0 0 0 1px rgba(154,176,204,0.3), 0 4px 24px rgba(0,0,0,0.6), 0 16px 48px rgba(0,0,0,0.4);
   }
 
   .result-frame::before {
-    content: '';
-    position: absolute;
-    inset: -6px;
-    border: 1px solid rgba(154,176,204,0.1);
-    pointer-events: none;
+    content: ''; position: absolute; inset: -6px;
+    border: 1px solid rgba(154,176,204,0.1); pointer-events: none;
   }
 
-  .result-img {
-    display: block;
-    max-width: 100%;
-    max-height: calc(100vh - 300px);
-    object-fit: contain;
-  }
+  .result-img { display: block; max-width: 100%; max-height: calc(100vh - 300px); object-fit: contain; }
 
-  /* Output meta bar */
   .output-meta {
-    display: flex;
-    gap: 24px;
-    align-items: center;
+    display: flex; gap: 24px; align-items: center;
     background: rgba(8,13,24,0.8);
     border: 1px solid var(--border);
     border-radius: 4px;
     padding: 14px 24px;
-    font-size: 11px;
-    letter-spacing: 0.12em;
+    font-size: 11px; letter-spacing: 0.12em;
+    flex-wrap: wrap; justify-content: center;
   }
 
-  .meta-item {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    align-items: center;
-  }
+  .meta-item { display: flex; flex-direction: column; gap: 3px; align-items: center; }
+  .meta-label { color: var(--muted); font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; }
+  .meta-value { color: var(--gold); font-size: 13px; font-family: 'Cormorant Garamond', serif; }
+  .meta-divider { width: 1px; height: 30px; background: var(--border); }
 
-  .meta-label {
-    color: var(--muted);
-    font-size: 9px;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-  }
-
-  .meta-value {
-    color: var(--gold);
-    font-size: 13px;
-    font-family: 'Cormorant Garamond', serif;
-  }
-
-  .meta-divider {
-    width: 1px;
-    height: 30px;
-    background: var(--border);
-  }
-
-  /* Download & actions */
-  .action-row {
-    display: flex;
-    gap: 12px;
-  }
+  .action-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
 
   .action-btn {
     background: transparent;
-    border: 1px solid var(--border);
-    border-radius: 3px;
+    border: 1px solid var(--border); border-radius: 3px;
     color: var(--parchment);
     font-family: 'Montserrat', sans-serif;
-    font-size: 10px;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
+    font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
     padding: 10px 20px;
-    cursor: pointer;
-    transition: all 0.2s;
+    cursor: pointer; transition: all 0.2s;
     text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
+    display: inline-flex; align-items: center; gap: 8px;
   }
 
-  .action-btn:hover {
-    border-color: var(--gold);
-    color: var(--gold);
-    background: rgba(154,176,204,0.06);
-  }
-
-  .action-btn.primary {
-    background: rgba(154,176,204,0.1);
-    border-color: var(--gold);
-    color: var(--gold);
-  }
-
-  .action-btn.primary:hover {
-    background: rgba(154,176,204,0.2);
-  }
+  .action-btn:hover { border-color: var(--gold); color: var(--gold); background: rgba(154,176,204,0.06); }
+  .action-btn.primary { background: rgba(154,176,204,0.1); border-color: var(--gold); color: var(--gold); }
+  .action-btn.primary:hover { background: rgba(154,176,204,0.2); }
 
   /* Loading overlay */
   .loading-overlay {
-    display: none;
-    position: absolute;
-    inset: 0;
-    background: rgba(8,13,24,0.85);
-    z-index: 100;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 24px;
+    display: none; position: absolute; inset: 0;
+    background: rgba(8,13,24,0.85); z-index: 100;
+    flex-direction: column; align-items: center; justify-content: center; gap: 24px;
   }
 
   .loading-overlay.active { display: flex; }
 
   .spinner {
-    width: 48px;
-    height: 48px;
+    width: 48px; height: 48px;
     border: 1px solid rgba(154,176,204,0.2);
     border-top-color: var(--gold);
     border-radius: 50%;
@@ -548,94 +396,32 @@
 
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  .loading-text {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 18px;
-    font-weight: 300;
-    letter-spacing: 0.12em;
-    color: var(--gold);
-  }
+  .loading-text { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 300; letter-spacing: 0.12em; color: var(--gold); }
+  .loading-sub { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); }
 
-  .loading-sub {
-    font-size: 10px;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-
-  /* Progress bar */
-  .progress-track {
-    width: 240px;
-    height: 1px;
-    background: rgba(154,176,204,0.15);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .progress-bar {
-    height: 100%;
-    background: var(--gold);
-    animation: progress-anim 2.4s ease-in-out infinite;
-    transform-origin: left;
-  }
+  .progress-track { width: 240px; height: 1px; background: rgba(154,176,204,0.15); position: relative; overflow: hidden; }
+  .progress-bar { height: 100%; background: var(--gold); animation: progress-anim 2.4s ease-in-out infinite; transform-origin: left; }
 
   @keyframes progress-anim {
-    0% { transform: translateX(-100%) scaleX(0.3); }
-    50% { transform: translateX(60%) scaleX(0.6); }
-    100% { transform: translateX(200%) scaleX(0.3); }
+    0%   { transform: translateX(-100%) scaleX(0.3); }
+    50%  { transform: translateX(60%)   scaleX(0.6); }
+    100% { transform: translateX(200%)  scaleX(0.3); }
   }
 
-  /* Status messages */
-  .status-bar {
-    font-size: 10px;
-    letter-spacing: 0.15em;
-    padding: 8px 12px;
-    border-radius: 3px;
-    margin-top: -16px;
-    display: none;
-  }
+  .status-bar { font-size: 10px; letter-spacing: 0.15em; padding: 8px 12px; border-radius: 3px; margin-top: -16px; display: none; }
+  .status-bar.error   { display: block; background: rgba(192,96,96,0.1);  border: 1px solid rgba(192,96,96,0.3);  color: #e08080; }
+  .status-bar.success { display: block; background: rgba(106,158,106,0.1); border: 1px solid rgba(106,158,106,0.3); color: #8ebe8e; }
+  .status-bar.info    { display: block; background: rgba(154,176,204,0.08); border: 1px solid var(--border); color: var(--muted); }
 
-  .status-bar.error {
-    display: block;
-    background: rgba(192,96,96,0.1);
-    border: 1px solid rgba(192,96,96,0.3);
-    color: #e08080;
-  }
-
-  .status-bar.success {
-    display: block;
-    background: rgba(106,158,106,0.1);
-    border: 1px solid rgba(106,158,106,0.3);
-    color: #8ebe8e;
-  }
-
-  .status-bar.info {
-    display: block;
-    background: rgba(154,176,204,0.08);
-    border: 1px solid var(--border);
-    color: var(--muted);
-  }
-
-  /* Scrollbar */
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: rgba(154,176,204,0.2); border-radius: 2px; }
   ::-webkit-scrollbar-thumb:hover { background: rgba(154,176,204,0.4); }
 
-  /* Tooltip */
-  .tooltip {
-    font-size: 9px;
-    color: var(--muted);
-    line-height: 1.5;
-    margin-top: 4px;
-  }
+  .tooltip { font-size: 9px; color: var(--muted); line-height: 1.5; margin-top: 4px; }
+  .char-count { font-size: 9px; color: var(--muted); text-align: right; margin-top: 4px; }
 
-  .char-count {
-    font-size: 9px;
-    color: var(--muted);
-    text-align: right;
-    margin-top: 4px;
-  }
+  .hidden { display: none !important; }
 </style>
 </head>
 <body>
@@ -648,47 +434,33 @@
 
 <div class="studio">
 
-  <!-- Control Panel -->
   <aside class="panel">
 
-    <!-- API Key -->
+    <!-- Mode Toggle -->
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="modeGenerate" onclick="setMode('generate')">
+        <span class="mode-icon">✦</span>
+        Generate
+      </button>
+      <button class="mode-btn" id="modeUpscale" onclick="setMode('upscale')">
+        <span class="mode-icon">⬆</span>
+        Upscale
+      </button>
+    </div>
+
+    <!-- API Key — shared -->
     <div class="api-section">
       <div class="section-label">Google AI API Key</div>
       <label for="apiKey">Gemini API Key</label>
       <input type="password" id="apiKey" placeholder="AIza..." autocomplete="off">
-      <div class="api-note">Free key from <strong>aistudio.google.com</strong> → Get API key. Never leaves your browser.</div>
-    </div>
-
-    <!-- Canvas Size -->
-    <div>
-      <div class="section-label">Print Dimensions</div>
-      <div class="size-row">
-        <div>
-          <label for="widthIn">Width (inches)</label>
-          <input type="number" id="widthIn" value="8" min="2" max="40" step="0.5">
-        </div>
-        <div class="size-x">×</div>
-        <div>
-          <label for="heightIn">Height (inches)</label>
-          <input type="number" id="heightIn" value="10" min="2" max="40" step="0.5">
-        </div>
-      </div>
-      <div class="size-hint" id="pixelDimHint">Loading…</div>
-
-      <!-- DPI -->
-      <div style="margin-top:20px">
-        <label>Output Resolution</label>
-        <div class="dpi-row">
-          <button class="dpi-btn" data-dpi="150">150 DPI</button>
-          <button class="dpi-btn active" data-dpi="240">240 DPI</button>
-          <button class="dpi-btn" data-dpi="300">300 DPI</button>
-        </div>
-        <div class="tooltip">150 DPI = draft/proof · 240 DPI = print standard · 300 DPI = archival/fine art</div>
+      <div class="api-note">
+        Free key from <strong>aistudio.google.com</strong> → Get API key. Never leaves your browser.
+        <span id="apiKeyNote" style="display:none;color:var(--gold-dim)"><br>Not needed for Faithful upscale.</span>
       </div>
     </div>
 
-    <!-- Style Presets -->
-    <div>
+    <!-- GENERATE: Style Presets -->
+    <div id="secStyles">
       <div class="section-label">Painting Style</div>
       <div class="presets-grid">
         <button class="preset-btn active" data-style="oil">
@@ -726,33 +498,91 @@
       </div>
     </div>
 
-    <!-- Image reference upload -->
-    <div>
+    <!-- GENERATE: Reference Image -->
+    <div id="secReference">
       <div class="section-label">Reference Image <span style="font-size:9px;color:var(--muted);letter-spacing:0.1em;text-transform:none;font-family:Montserrat;font-weight:300">(optional)</span></div>
       <div class="upload-zone" id="uploadZone">
         <input type="file" id="imageUpload" accept="image/*">
         <div id="uploadPlaceholder">
           <div class="upload-icon">🖼</div>
-          <div class="upload-text">Drop an image or click to browse<br><span style="font-size:9px;opacity:0.6">JPG, PNG, WEBP — used as style reference</span></div>
+          <div class="upload-text">Drop a photo to paint from<br><span style="font-size:9px;opacity:0.6">JPG, PNG, WEBP — AI uses it as composition reference</span></div>
         </div>
         <img id="uploadPreview" class="upload-preview" alt="Reference">
         <div id="uploadFilename" class="upload-filename"></div>
       </div>
     </div>
 
-    <!-- Painting Description -->
-    <div>
-      <div class="section-label">Painting Description</div>
+    <!-- GENERATE: Description -->
+    <div id="secDescription">
+      <div class="section-label">Painting Description <span id="descOptionalTag" style="display:none;font-size:9px;color:var(--muted);letter-spacing:0.1em;text-transform:none;font-family:Montserrat;font-weight:300">(optional — reference image loaded)</span></div>
       <label for="paintDesc">Describe your artwork</label>
       <textarea id="paintDesc" placeholder="e.g. A sweeping coastal cliffside at golden hour, waves crashing below, sea mist catching warm amber light, moody and atmospheric, reminiscent of Thomas Moran…" maxlength="1200"></textarea>
       <div class="char-count" id="charCount">0 / 1200</div>
     </div>
 
-    <!-- Status -->
+    <!-- UPSCALE: Source painting -->
+    <div id="secUploadSource" class="hidden">
+      <div class="section-label">Original Painting</div>
+      <div class="upload-zone upload-zone-large" id="uploadZoneSource">
+        <input type="file" id="imageUploadSource" accept="image/*">
+        <div id="uploadSourcePlaceholder">
+          <div class="upload-icon-large">🎨</div>
+          <div class="upload-text">Drop your painting photo here<br><span style="font-size:9px;opacity:0.6">JPG, PNG, WEBP — your original artwork</span></div>
+        </div>
+        <img id="uploadSourcePreview" class="upload-preview" style="max-height:200px" alt="Source painting">
+        <div id="uploadSourceFilename" class="upload-filename"></div>
+      </div>
+    </div>
+
+    <!-- UPSCALE: Method -->
+    <div id="secMethod" class="hidden">
+      <div class="section-label">Upscale Method</div>
+      <div class="method-toggle">
+        <button class="method-btn active" data-method="faithful" onclick="setMethod('faithful')">
+          <span class="method-name">Faithful</span>
+          <span class="method-desc">Exact pixel-perfect upscale. No AI alteration. Works without API key.</span>
+        </button>
+        <button class="method-btn" data-method="enhanced" onclick="setMethod('enhanced')">
+          <span class="method-name">AI Enhanced</span>
+          <span class="method-desc">Gemini recovers brushwork detail before upscaling. Requires API key.</span>
+        </button>
+      </div>
+      <div class="method-note" id="methodNote">
+        Your painting is scaled to the exact target resolution with a sharpening pass. Color, composition, and every brushstroke are preserved exactly as photographed.
+      </div>
+    </div>
+
+    <!-- SHARED: Dimensions + DPI -->
+    <div>
+      <div class="section-label">Print Dimensions</div>
+      <div class="size-row">
+        <div>
+          <label for="widthIn">Width (inches)</label>
+          <input type="number" id="widthIn" value="8" min="2" max="40" step="0.5">
+        </div>
+        <div class="size-x">×</div>
+        <div>
+          <label for="heightIn">Height (inches)</label>
+          <input type="number" id="heightIn" value="10" min="2" max="40" step="0.5">
+        </div>
+      </div>
+      <div class="size-hint" id="pixelDimHint">Loading…</div>
+
+      <div style="margin-top:20px">
+        <label>Output Resolution</label>
+        <div class="dpi-row">
+          <button class="dpi-btn" data-dpi="150">150 DPI</button>
+          <button class="dpi-btn active" data-dpi="240">240 DPI</button>
+          <button class="dpi-btn" data-dpi="300">300 DPI</button>
+        </div>
+        <div class="tooltip">150 DPI = draft/proof · 240 DPI = print standard · 300 DPI = archival/fine art</div>
+        <div id="dpiSmartHint" style="font-size:10px;margin-top:8px;padding:8px 10px;border-radius:3px;background:rgba(154,176,204,0.06);border:1px solid var(--border-subtle);color:var(--muted);display:none;line-height:1.5;"></div>
+      </div>
+    </div>
+
     <div id="statusBar" class="status-bar"></div>
 
-    <!-- Generate -->
-    <button class="generate-btn" id="generateBtn" onclick="generatePrint()">
+    <button class="generate-btn" id="generateBtn" onclick="handleAction()">
       Generate Giclée Print
     </button>
 
@@ -763,37 +593,27 @@
 
     <div class="loading-overlay" id="loadingOverlay">
       <div class="spinner"></div>
-      <div class="loading-text">Rendering your print…</div>
+      <div class="loading-text" id="loadingTitle">Rendering your print…</div>
       <div class="progress-track"><div class="progress-bar"></div></div>
       <div class="loading-sub" id="loadingStatus">Generating composition</div>
     </div>
 
-    <!-- Empty state -->
     <div class="empty-state" id="emptyState">
       <span class="empty-icon">✦</span>
       <div class="empty-title">Your canvas awaits</div>
-      <div class="empty-sub">Configure & Generate to Render</div>
+      <div class="empty-sub" id="emptySubText">Configure &amp; Generate to Render</div>
     </div>
 
-    <!-- Result -->
     <div class="result-wrapper" id="resultWrapper">
       <div class="result-frame">
         <img id="resultImg" class="result-img" alt="Generated giclée print">
       </div>
       <div class="output-meta" id="outputMeta"></div>
       <div class="action-row">
-        <button class="action-btn primary" id="downloadBtn" onclick="downloadPrint()">
-          ⬇ Download Print PNG
-        </button>
-        <button class="action-btn" onclick="saveForWeb()">
-          🌐 Save for Web
-        </button>
-        <button class="action-btn" onclick="copyPromptUsed()">
-          ⊞ Copy Prompt
-        </button>
-        <button class="action-btn" onclick="resetCanvas()">
-          ↺ New Print
-        </button>
+        <button class="action-btn primary" onclick="downloadPrint()">⬇ Download Print PNG</button>
+        <button class="action-btn" onclick="saveForWeb()">🌐 Save for Web</button>
+        <button class="action-btn" id="copyPromptBtn" onclick="copyPromptUsed()">⊞ Copy Prompt</button>
+        <button class="action-btn" onclick="resetCanvas()">↺ New Print</button>
       </div>
     </div>
 
@@ -801,25 +621,81 @@
 </div>
 
 <script>
-// ─── State ───────────────────────────────────────────────────────────────────
-let selectedDPI = 240;
-let selectedStyle = 'oil';
-let uploadedImageBase64 = null;
-let uploadedImageType = null;
-let lastPrompt = '';
-let lastImageData = null;
+// ─── State ────────────────────────────────────────────────────────────────────
+let currentMode    = 'generate';
+let selectedDPI    = 240;
+let selectedStyle  = 'oil';
+let selectedMethod = 'faithful';
 
-// ─── DPI selector ────────────────────────────────────────────────────────────
+let refImageBase64 = null;
+let refImageType   = null;
+let srcImageBase64 = null;
+let srcImageType   = null;
+
+let lastPrompt     = '';
+let lastImageData  = null;
+
+// ─── Mode switching ───────────────────────────────────────────────────────────
+function setMode(mode) {
+  currentMode = mode;
+
+  document.getElementById('modeGenerate').classList.toggle('active', mode === 'generate');
+  document.getElementById('modeUpscale').classList.toggle('active',  mode === 'upscale');
+
+  const generateSections = ['secStyles', 'secReference', 'secDescription'];
+  const upscaleSections  = ['secUploadSource', 'secMethod'];
+
+  generateSections.forEach(id => document.getElementById(id).classList.toggle('hidden', mode !== 'generate'));
+  upscaleSections.forEach(id  => document.getElementById(id).classList.toggle('hidden', mode !== 'upscale'));
+
+  document.getElementById('apiKeyNote').style.display   = mode === 'upscale' ? 'inline' : 'none';
+  document.getElementById('copyPromptBtn').style.display = mode === 'generate' ? '' : 'none';
+
+  document.getElementById('generateBtn').textContent =
+    mode === 'generate' ? 'Generate Giclée Print' : 'Upscale to Print Resolution';
+
+  document.getElementById('emptySubText').textContent =
+    mode === 'generate' ? 'Configure & Generate to Render' : 'Drop a painting & upscale to print resolution';
+}
+
+// ─── Upscale method ───────────────────────────────────────────────────────────
+function setMethod(method) {
+  selectedMethod = method;
+  document.querySelectorAll('.method-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.method === method));
+
+  document.getElementById('methodNote').textContent = method === 'faithful'
+    ? 'Your painting is scaled to the exact target resolution with a sharpening pass. Color, composition, and every brushstroke are preserved exactly as photographed.'
+    : 'Gemini analyzes your painting and reconstructs fine brushwork detail, sharpens edges, and improves tonal range — then scales to print resolution. Requires API key.';
+}
+
+// ─── DPI selector ─────────────────────────────────────────────────────────────
 document.querySelectorAll('.dpi-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.dpi-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     selectedDPI = parseInt(btn.dataset.dpi);
     updateHint();
+    updateDpiSmartHint();
   });
 });
 
-// ─── Style selector ──────────────────────────────────────────────────────────
+function updateDpiSmartHint() {
+  const hint = document.getElementById('dpiSmartHint');
+  if (selectedDPI === 150) {
+    hint.style.display = 'block';
+    hint.innerHTML = '⚠ 150 DPI is suitable for proofing only. For any painting with fine brushwork, texture, or detail — use 240 or 300 DPI for print.';
+  } else if (selectedDPI === 240) {
+    hint.style.display = 'block';
+    hint.innerHTML = '✓ 240 DPI is solid for most prints up to 16×20". For highly detailed work or prints smaller than 8×10", consider 300 DPI.';
+  } else {
+    hint.style.display = 'block';
+    hint.innerHTML = '✦ 300 DPI — archival quality. Recommended for detailed brushwork, small prints, or any work destined for a professional printer.';
+    hint.style.color = 'var(--gold-dim)';
+  }
+}
+
+// ─── Style selector ───────────────────────────────────────────────────────────
 document.querySelectorAll('.preset-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
@@ -828,15 +704,15 @@ document.querySelectorAll('.preset-btn').forEach(btn => {
   });
 });
 
-// ─── Pixel hint ──────────────────────────────────────────────────────────────
+// ─── Pixel hint ───────────────────────────────────────────────────────────────
 function updateHint() {
-  const w = parseFloat(document.getElementById('widthIn').value) || 0;
-  const h = parseFloat(document.getElementById('heightIn').value) || 0;
-  const px_w = Math.round(w * selectedDPI);
-  const px_h = Math.round(h * selectedDPI);
-  const approxMB = ((px_w * px_h * 3) / (1024 * 1024)).toFixed(1);
+  const w   = parseFloat(document.getElementById('widthIn').value)  || 0;
+  const h   = parseFloat(document.getElementById('heightIn').value) || 0;
+  const pw  = Math.round(w * selectedDPI);
+  const ph  = Math.round(h * selectedDPI);
+  const mb  = ((pw * ph * 3) / (1024 * 1024)).toFixed(1);
   document.getElementById('pixelDimHint').textContent =
-    `${px_w.toLocaleString()} × ${px_h.toLocaleString()} px · ~${approxMB} MB uncompressed`;
+    `${pw.toLocaleString()} × ${ph.toLocaleString()} px · ~${mb} MB uncompressed`;
 }
 
 document.getElementById('widthIn').addEventListener('input', updateHint);
@@ -848,77 +724,92 @@ document.getElementById('paintDesc').addEventListener('input', function() {
   document.getElementById('charCount').textContent = `${this.value.length} / 1200`;
 });
 
-// ─── Image upload ─────────────────────────────────────────────────────────────
+// ─── Reference image upload (generate) ───────────────────────────────────────
 document.getElementById('imageUpload').addEventListener('change', function(e) {
   const file = e.target.files[0];
   if (!file) return;
-
   const reader = new FileReader();
-  reader.onload = function(ev) {
-    uploadedImageBase64 = ev.target.result.split(',')[1];
-    uploadedImageType = file.type;
-
-    const preview = document.getElementById('uploadPreview');
-    preview.src = ev.target.result;
+  reader.onload = ev => {
+    refImageBase64 = ev.target.result.split(',')[1];
+    refImageType   = file.type;
+    const preview  = document.getElementById('uploadPreview');
+    preview.src    = ev.target.result;
     preview.style.display = 'block';
-    document.getElementById('uploadFilename').textContent = file.name;
-    document.getElementById('uploadFilename').style.display = 'block';
+    document.getElementById('uploadFilename').textContent    = file.name;
+    document.getElementById('uploadFilename').style.display  = 'block';
     document.getElementById('uploadPlaceholder').style.display = 'none';
     document.getElementById('uploadZone').classList.add('has-image');
+    // Mark description as optional
+    document.getElementById('descOptionalTag').style.display = 'inline';
+    document.getElementById('paintDesc').placeholder = 'Optional — describe any changes or additions to the reference (e.g. "make it more stormy", "add a figure in the foreground"). Leave blank to paint directly from the image.';
   };
   reader.readAsDataURL(file);
 });
 
-// ─── Status helper ────────────────────────────────────────────────────────────
+// ─── Source painting upload (upscale) ────────────────────────────────────────
+document.getElementById('imageUploadSource').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    srcImageBase64 = ev.target.result.split(',')[1];
+    srcImageType   = file.type;
+    const preview  = document.getElementById('uploadSourcePreview');
+    preview.src    = ev.target.result;
+    preview.style.display = 'block';
+    document.getElementById('uploadSourceFilename').textContent    = file.name;
+    document.getElementById('uploadSourceFilename').style.display  = 'block';
+    document.getElementById('uploadSourcePlaceholder').style.display = 'none';
+    document.getElementById('uploadZoneSource').classList.add('has-image');
+  };
+  reader.readAsDataURL(file);
+});
+
+// ─── Status helpers ───────────────────────────────────────────────────────────
 function setStatus(msg, type = 'info') {
   const bar = document.getElementById('statusBar');
   bar.textContent = msg;
-  bar.className = `status-bar ${type}`;
+  bar.className   = `status-bar ${type}`;
+}
+function clearStatus() { document.getElementById('statusBar').className = 'status-bar'; }
+function setLoadingStatus(msg) {
+  const el = document.getElementById('loadingStatus');
+  if (el) el.textContent = msg;
 }
 
-function clearStatus() {
-  document.getElementById('statusBar').className = 'status-bar';
-}
+// ─── Style map ────────────────────────────────────────────────────────────────
+const styleMap = {
+  oil:               'oil on canvas, impasto brushwork, layered glazes, old masters technique, luminous highlights, warm varnished finish, gallery painting',
+  watercolor:        'watercolor on cold press paper, wet-on-wet blooms, translucent washes, delicate granulation, white paper showing through, fine art',
+  acrylic:           'acrylic on canvas, bold saturated color, contemporary fine art, textured brushwork, strong contrast',
+  pastel:            'soft pastel on textured paper, chalky matte surface, blended tones, velvety finish, fine art pastel drawing',
+  charcoal:          'charcoal on paper, dramatic tonal range, expressive gestural marks, deep velvety blacks, blended mid-tones, fine art drawing',
+  impasto:           'impasto oil painting, extremely thick paint application, heavily loaded palette knife and brush, raised ridges and sculptural texture, visible paint buildup, Van Gogh and de Kooning influence, dimensional surface, expressive bold strokes',
+  impressionist:     'impressionist oil painting, broken color, visible brushstrokes, plein air, Monet and Pissarro influence, painterly light',
+  'textured-giclee': 'fine art giclée print on heavy textured canvas, visible canvas weave beneath archival inks, matte substrate tooth showing through color, linen grain texture, museum archival reproduction quality, rich ink saturation on textured fine art paper'
+};
 
-// ─── Build Flux-optimized prompt ─────────────────────────────────────────────
 function buildPrompt(userDesc, style, widthIn, heightIn) {
-  const styleMap = {
-    oil: 'oil on canvas, impasto brushwork, layered glazes, old masters technique, luminous highlights, warm varnished finish, gallery painting',
-    watercolor: 'watercolor on cold press paper, wet-on-wet blooms, translucent washes, delicate granulation, white paper showing through, fine art',
-    acrylic: 'acrylic on canvas, bold saturated color, contemporary fine art, textured brushwork, strong contrast',
-    pastel: 'soft pastel on textured paper, chalky matte surface, blended tones, velvety finish, fine art pastel drawing',
-    charcoal: 'charcoal on paper, dramatic tonal range, expressive gestural marks, deep velvety blacks, blended mid-tones, fine art drawing',
-    impasto: 'impasto oil painting, extremely thick paint application, heavily loaded palette knife and brush, raised ridges and sculptural texture, visible paint buildup, Van Gogh and de Kooning influence, dimensional surface, expressive bold strokes',
-    impressionist: 'impressionist oil painting, broken color, visible brushstrokes, plein air, Monet and Pissarro influence, painterly light',
-    'textured-giclee': 'fine art giclée print on heavy textured canvas, visible canvas weave beneath archival inks, matte substrate tooth showing through color, linen grain texture, museum archival reproduction quality, rich ink saturation on textured fine art paper'
-  };
-
-  const styleKeywords = styleMap[style] || styleMap.oil;
-  const orientation = widthIn > heightIn ? 'landscape' : (heightIn > widthIn ? 'portrait' : 'square');
-
-  return `${userDesc}, ${styleKeywords}, museum quality fine art, giclée archival print, ${orientation} composition, rich tonal range, deep saturated color, highly detailed, masterpiece, exhibition quality, professional artwork`;
+  const keywords    = styleMap[style] || styleMap.oil;
+  const orientation = widthIn > heightIn ? 'landscape' : heightIn > widthIn ? 'portrait' : 'square';
+  const noFrame     = 'no frame, no border, no mat, no vignette, painting surface only, full bleed composition';
+  return `${userDesc}, ${keywords}, museum quality fine art, giclée archival print, ${orientation} composition, rich tonal range, deep saturated color, highly detailed, masterpiece, exhibition quality, professional artwork, ${noFrame}`;
 }
 
-// ─── Scale image up via canvas ────────────────────────────────────────────────
-function scaleToGiclee(srcBase64, targetW, targetH, quality) {
+// ─── Canvas scale + sharpen ───────────────────────────────────────────────────
+function scaleToGiclee(srcBase64, targetW, targetH) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
       const canvas = document.createElement('canvas');
-      canvas.width = targetW;
-      canvas.height = targetH;
+      canvas.width = targetW; canvas.height = targetH;
       const ctx = canvas.getContext('2d');
-
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(img, 0, 0, targetW, targetH);
-
       const imageData = ctx.getImageData(0, 0, targetW, targetH);
-      if (targetW * targetH < 12000000) {
-        applySharpen(ctx, imageData, targetW, targetH);
-      }
-
+      if (targetW * targetH < 12000000) applySharpen(ctx, imageData, targetW, targetH);
       canvas.toBlob(blob => {
         if (!blob) { reject(new Error('Canvas toBlob failed')); return; }
         resolve(blob);
@@ -930,289 +821,302 @@ function scaleToGiclee(srcBase64, targetW, targetH, quality) {
 }
 
 function applySharpen(ctx, imageData, w, h) {
-  const kernel = [
-     0, -0.3,    0,
-    -0.3, 2.2, -0.3,
-     0, -0.3,    0
-  ];
+  const kernel = [0, -0.3, 0, -0.3, 2.2, -0.3, 0, -0.3, 0];
   const src = new Uint8ClampedArray(imageData.data);
   const dst = imageData.data;
-
   for (let y = 1; y < h - 1; y++) {
     for (let x = 1; x < w - 1; x++) {
       const idx = (y * w + x) * 4;
       for (let c = 0; c < 3; c++) {
         let val = 0;
-        for (let ky = -1; ky <= 1; ky++) {
-          for (let kx = -1; kx <= 1; kx++) {
-            val += src[((y + ky) * w + (x + kx)) * 4 + c] * kernel[(ky + 1) * 3 + (kx + 1)];
-          }
-        }
-        dst[idx + c] = Math.min(255, Math.max(0, val));
+        for (let ky = -1; ky <= 1; ky++)
+          for (let kx = -1; kx <= 1; kx++)
+            val += src[((y+ky)*w+(x+kx))*4+c] * kernel[(ky+1)*3+(kx+1)];
+        dst[idx+c] = Math.min(255, Math.max(0, val));
       }
     }
   }
   ctx.putImageData(imageData, 0, 0);
 }
 
-// ─── Generate image via Google Gemini Imagen API ─────────────────────────────
-async function fetchImageWithRetry(prompt, w, h, seed) {
-  const apiKey = document.getElementById('apiKey').value.trim();
-  if (!apiKey) throw new Error('Please enter your Google AI API key from aistudio.google.com');
-
-  setLoadingStatus('Sending to Google Imagen 4…');
-
-  const ratio = w / h;
-  let aspectRatio;
-  if (ratio > 1.6)       aspectRatio = '16:9';
-  else if (ratio > 1.2)  aspectRatio = '4:3';
-  else if (ratio > 0.85) aspectRatio = '1:1';
-  else if (ratio > 0.65) aspectRatio = '3:4';
-  else                   aspectRatio = '9:16';
-
-  try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`;
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        instances: [{ prompt }],
-        parameters: { sampleCount: 1, aspectRatio, safetyFilterLevel: 'block_few' }
-      })
-    });
-    if (res.ok) {
-      const data = await res.json();
-      const b64 = data?.predictions?.[0]?.bytesBase64Encoded;
-      if (b64) { console.log('Imagen 4 success'); return b64; }
-    }
-    const errData = await res.json().catch(() => ({}));
-    console.warn('Imagen 4 failed:', errData?.error?.message);
-  } catch (e) { console.warn('Imagen 4 error:', e.message); }
-
-  setLoadingStatus('Trying Gemini 3.1 Flash image generation…');
-  try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${apiKey}`;
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { responseModalities: ['TEXT', 'IMAGE'] }
-      })
-    });
-    if (res.ok) {
-      const data = await res.json();
-      const parts = data?.candidates?.[0]?.content?.parts || [];
-      const imgPart = parts.find(p => p.inlineData?.mimeType?.startsWith('image/'));
-      if (imgPart) return imgPart.inlineData.data;
-    }
-    const errData = await res.json().catch(() => ({}));
-    const msg = errData?.error?.message || `HTTP ${res.status}`;
-    throw new Error(`Google API: ${msg}`);
-  } catch (e) {
-    throw new Error(`${e.message} — Check your key at aistudio.google.com → API Keys`);
-  }
-}
-
-function setLoadingStatus(msg) {
-  const el = document.getElementById('loadingStatus');
-  if (el) el.textContent = msg;
-}
-
 function blobToBase64(blob) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = e => resolve(e.target.result.split(',')[1]);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(blob);
   });
 }
 
-// ─── Main generation ──────────────────────────────────────────────────────────
-async function generatePrint() {
-  clearStatus();
-
-  const desc = document.getElementById('paintDesc').value.trim();
-  if (!desc) {
-    setStatus('Please describe your painting.', 'error');
-    return;
+async function twoPassScale(base64, targetW, targetH) {
+  if (targetW * targetH > 40000000) {
+    const midBlob = await scaleToGiclee(base64, Math.round(targetW*0.6), Math.round(targetH*0.6));
+    return scaleToGiclee(await blobToBase64(midBlob), targetW, targetH);
   }
-
-  const widthIn = parseFloat(document.getElementById('widthIn').value);
-  const heightIn = parseFloat(document.getElementById('heightIn').value);
-  if (!widthIn || !heightIn || widthIn < 2 || heightIn < 2) {
-    setStatus('Please enter valid dimensions (minimum 2 inches).', 'error');
-    return;
-  }
-
-  const targetW = Math.round(widthIn * selectedDPI);
-  const targetH = Math.round(heightIn * selectedDPI);
-
-  document.getElementById('emptyState').style.display = 'none';
-  document.getElementById('resultWrapper').style.display = 'none';
-  document.getElementById('loadingOverlay').classList.add('active');
-  document.getElementById('generateBtn').disabled = true;
-
-  const loadingSteps = [
-    'Composing the scene…',
-    'Rendering paint medium…',
-    'Building tonal range…',
-    'Refining fine details…',
-    'Optimizing color depth…',
-    'Preparing archival output…'
-  ];
-  let stepIdx = 0;
-  const stepInterval = setInterval(() => {
-    document.getElementById('loadingStatus').textContent = loadingSteps[stepIdx % loadingSteps.length];
-    stepIdx++;
-  }, 2800);
-
-  try {
-    const fullPrompt = buildPrompt(desc, selectedStyle, widthIn, heightIn);
-    lastPrompt = fullPrompt;
-
-    const aspectRatio = widthIn / heightIn;
-    let apiW, apiH;
-    if (aspectRatio >= 1) {
-      apiW = 1344;
-      apiH = Math.round(1344 / aspectRatio);
-    } else {
-      apiH = 1344;
-      apiW = Math.round(1344 * aspectRatio);
-    }
-    apiW = Math.min(2048, Math.max(512, Math.round(apiW / 8) * 8));
-    apiH = Math.min(2048, Math.max(512, Math.round(apiH / 8) * 8));
-
-    document.getElementById('loadingStatus').textContent = `Generating ${apiW}×${apiH}px artwork…`;
-
-    const seed = Math.floor(Math.random() * 999999);
-    const imgBase64 = await fetchImageWithRetry(fullPrompt, apiW, apiH, seed);
-    clearInterval(stepInterval);
-
-    document.getElementById('loadingStatus').textContent = `Scaling to ${targetW.toLocaleString()}×${targetH.toLocaleString()}px @ ${selectedDPI} DPI…`;
-    document.getElementById('loadingStatus').textContent = 'Applying archival sharpening…';
-
-    let finalBlob;
-    if (targetW * targetH > 40000000) {
-      const midW = Math.round(targetW * 0.6);
-      const midH = Math.round(targetH * 0.6);
-      const midBlob = await scaleToGiclee(imgBase64, midW, midH);
-      const midBase64 = await new Promise((res, rej) => {
-        const reader = new FileReader();
-        reader.onload = e => res(e.target.result.split(',')[1]);
-        reader.onerror = rej;
-        reader.readAsDataURL(midBlob);
-      });
-      finalBlob = await scaleToGiclee(midBase64, targetW, targetH);
-    } else {
-      finalBlob = await scaleToGiclee(imgBase64, targetW, targetH);
-    }
-
-    document.getElementById('loadingStatus').textContent = 'Finalizing…';
-
-    if (lastImageData) URL.revokeObjectURL(lastImageData);
-    lastImageData = URL.createObjectURL(finalBlob);
-
-    const fileSizeMB = (finalBlob.size / (1024 * 1024)).toFixed(2);
-
-    const resultImg = document.getElementById('resultImg');
-    resultImg.src = lastImageData;
-    resultImg.onload = () => {
-      document.getElementById('loadingOverlay').classList.remove('active');
-
-      document.getElementById('outputMeta').innerHTML = `
-        <div class="meta-item">
-          <span class="meta-label">Dimensions</span>
-          <span class="meta-value">${widthIn}" × ${heightIn}"</span>
-        </div>
-        <div class="meta-divider"></div>
-        <div class="meta-item">
-          <span class="meta-label">Resolution</span>
-          <span class="meta-value">${selectedDPI} DPI</span>
-        </div>
-        <div class="meta-divider"></div>
-        <div class="meta-item">
-          <span class="meta-label">Pixels</span>
-          <span class="meta-value">${targetW.toLocaleString()} × ${targetH.toLocaleString()}</span>
-        </div>
-        <div class="meta-divider"></div>
-        <div class="meta-item">
-          <span class="meta-label">File Size</span>
-          <span class="meta-value">${fileSizeMB} MB</span>
-        </div>
-        <div class="meta-divider"></div>
-        <div class="meta-item">
-          <span class="meta-label">Format</span>
-          <span class="meta-value">PNG · Archival</span>
-        </div>
-      `;
-
-      document.getElementById('resultWrapper').style.display = 'flex';
-      setStatus(`Print ready — ${targetW.toLocaleString()}×${targetH.toLocaleString()}px · ${fileSizeMB} MB · ${selectedDPI} DPI`, 'success');
-    };
-
-  } catch (err) {
-    clearInterval(stepInterval);
-    document.getElementById('loadingOverlay').classList.remove('active');
-    document.getElementById('emptyState').style.display = 'block';
-    console.error(err);
-    setStatus(`Error: ${err.message}`, 'error');
-  }
-
-  document.getElementById('generateBtn').disabled = false;
+  return scaleToGiclee(base64, targetW, targetH);
 }
 
-// ─── Download ─────────────────────────────────────────────────────────────────
+// ─── API: Gemini multimodal (image + text or text only) ───────────────────────
+async function fetchGeminiImage(prompt, imageBase64, imageMimeType, apiKey) {
+  const parts = [];
+  if (imageBase64 && imageMimeType) {
+    parts.push({ inlineData: { mimeType: imageMimeType, data: imageBase64 } });
+  }
+  parts.push({ text: prompt });
+
+  // Try gemini-2.0-flash first
+  const models = [
+    'gemini-2.0-flash-preview-image-generation',
+    'gemini-3.1-flash-image-preview'
+  ];
+
+  for (const model of models) {
+    try {
+      setLoadingStatus(`Sending to ${model}…`);
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts }],
+            generationConfig: { responseModalities: ['TEXT', 'IMAGE'] }
+          })
+        }
+      );
+      if (res.ok) {
+        const data  = await res.json();
+        const parts2 = data?.candidates?.[0]?.content?.parts || [];
+        const imgPart = parts2.find(p => p.inlineData?.mimeType?.startsWith('image/'));
+        if (imgPart) { console.log(`${model} success`); return imgPart.inlineData.data; }
+      }
+      const err = await res.json().catch(() => ({}));
+      console.warn(`${model} failed:`, err?.error?.message);
+    } catch(e) { console.warn(`${model} error:`, e.message); }
+  }
+  throw new Error('All Gemini image models failed — check your API key at aistudio.google.com');
+}
+
+// ─── API: Imagen 4 (text only) ────────────────────────────────────────────────
+async function fetchImagen4(prompt, aspectRatio, apiKey) {
+  try {
+    setLoadingStatus('Sending to Google Imagen 4…');
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          instances:  [{ prompt }],
+          parameters: { sampleCount: 1, aspectRatio, safetyFilterLevel: 'block_few' }
+        })
+      }
+    );
+    if (res.ok) {
+      const data = await res.json();
+      const b64  = data?.predictions?.[0]?.bytesBase64Encoded;
+      if (b64) { console.log('Imagen 4 success'); return b64; }
+    }
+    const err = await res.json().catch(() => ({}));
+    console.warn('Imagen 4 failed:', err?.error?.message);
+  } catch(e) { console.warn('Imagen 4 error:', e.message); }
+  return null;
+}
+
+// ─── Main dispatcher ──────────────────────────────────────────────────────────
+function handleAction() {
+  if (currentMode === 'generate') runGenerate();
+  else runUpscale();
+}
+
+// ─── GENERATE ─────────────────────────────────────────────────────────────────
+async function runGenerate() {
+  clearStatus();
+  const apiKey   = document.getElementById('apiKey').value.trim();
+  if (!apiKey)   { setStatus('Please enter your Google AI API key.', 'error'); return; }
+  const desc     = document.getElementById('paintDesc').value.trim();
+  if (!desc && !refImageBase64) { setStatus('Please describe your painting — or drop a reference image.', 'error'); return; }
+  const widthIn  = parseFloat(document.getElementById('widthIn').value);
+  const heightIn = parseFloat(document.getElementById('heightIn').value);
+  if (!widthIn || !heightIn || widthIn < 2 || heightIn < 2) {
+    setStatus('Please enter valid dimensions (minimum 2 inches).', 'error'); return;
+  }
+
+  const targetW = Math.round(widthIn  * selectedDPI);
+  const targetH = Math.round(heightIn * selectedDPI);
+
+  showLoading('Rendering your painting…');
+
+  const steps = ['Composing the scene…','Rendering paint medium…','Building tonal range…','Refining fine details…','Optimizing color depth…','Preparing archival output…'];
+  let si = 0;
+  const timer = setInterval(() => setLoadingStatus(steps[si++ % steps.length]), 2800);
+
+  try {
+    const fullPrompt = buildPrompt(
+      desc || 'Paint this subject faithfully, capturing its mood, light, and composition',
+      selectedStyle, widthIn, heightIn
+    );
+    lastPrompt = fullPrompt;
+
+    let imgBase64;
+
+    if (refImageBase64) {
+      // Image-to-painting: send photo + prompt to Gemini
+      const paintPrompt = `Using this image as your composition and subject reference, create: ${fullPrompt}. Interpret it faithfully in the specified painting style — do not simply reproduce the photograph, paint it as a fine art work.`;
+      imgBase64 = await fetchGeminiImage(paintPrompt, refImageBase64, refImageType, apiKey);
+    } else {
+      // Text-to-image: try Imagen 4 first, fall back to Gemini
+      const ratio = widthIn / heightIn;
+      const ar = ratio > 1.6 ? '16:9' : ratio > 1.2 ? '4:3' : ratio > 0.85 ? '1:1' : ratio > 0.65 ? '3:4' : '9:16';
+      imgBase64 = await fetchImagen4(fullPrompt, ar, apiKey);
+      if (!imgBase64) imgBase64 = await fetchGeminiImage(fullPrompt, null, null, apiKey);
+    }
+
+    clearInterval(timer);
+    setLoadingStatus(`Scaling to ${targetW.toLocaleString()}×${targetH.toLocaleString()}px @ ${selectedDPI} DPI…`);
+    const finalBlob = await twoPassScale(imgBase64, targetW, targetH);
+    await showResult(finalBlob, widthIn, heightIn, targetW, targetH, 'Generated');
+
+  } catch(err) {
+    clearInterval(timer);
+    hideLoading();
+    setStatus(`Error: ${err.message}`, 'error');
+    console.error(err);
+  }
+}
+
+// ─── UPSCALE ──────────────────────────────────────────────────────────────────
+async function runUpscale() {
+  clearStatus();
+  if (!srcImageBase64) { setStatus('Please drop your painting photo first.', 'error'); return; }
+  const widthIn  = parseFloat(document.getElementById('widthIn').value);
+  const heightIn = parseFloat(document.getElementById('heightIn').value);
+  if (!widthIn || !heightIn || widthIn < 2 || heightIn < 2) {
+    setStatus('Please enter valid dimensions (minimum 2 inches).', 'error'); return;
+  }
+  const targetW = Math.round(widthIn  * selectedDPI);
+  const targetH = Math.round(heightIn * selectedDPI);
+
+  if (selectedMethod === 'faithful') {
+    showLoading('Upscaling your painting…');
+    setLoadingStatus(`Scaling to ${targetW.toLocaleString()}×${targetH.toLocaleString()}px…`);
+    try {
+      const blob = await twoPassScale(srcImageBase64, targetW, targetH);
+      await showResult(blob, widthIn, heightIn, targetW, targetH, 'Faithful Upscale');
+    } catch(err) { hideLoading(); setStatus(`Error: ${err.message}`, 'error'); }
+
+  } else {
+    const apiKey = document.getElementById('apiKey').value.trim();
+    if (!apiKey) { setStatus('AI Enhanced upscale requires a Google AI API key.', 'error'); return; }
+
+    showLoading('Enhancing your painting with AI…');
+    const steps = ['Analyzing brushwork…','Reconstructing fine detail…','Sharpening edges…','Improving tonal range…','Preserving artistic character…'];
+    let si = 0;
+    const timer = setInterval(() => setLoadingStatus(steps[si++ % steps.length]), 3000);
+
+    try {
+      const enhancePrompt = `This is a photograph of an original fine art painting. Enhance it for archival giclée print reproduction: sharpen brushwork and paint texture, improve tonal depth and color richness, recover photographic detail loss — while faithfully preserving the exact composition, color palette, subject matter, and artistic character. Do not add new elements or change the style. Output the enhanced painting.`;
+      const enhanced = await fetchGeminiImage(enhancePrompt, srcImageBase64, srcImageType, apiKey);
+      clearInterval(timer);
+      setLoadingStatus(`Scaling to ${targetW.toLocaleString()}×${targetH.toLocaleString()}px…`);
+      const blob = await twoPassScale(enhanced, targetW, targetH);
+      await showResult(blob, widthIn, heightIn, targetW, targetH, 'AI Enhanced Upscale');
+    } catch(err) {
+      clearInterval(timer);
+      hideLoading();
+      setStatus(`Error: ${err.message}`, 'error');
+      console.error(err);
+    }
+  }
+}
+
+// ─── Show result ──────────────────────────────────────────────────────────────
+function showResult(blob, widthIn, heightIn, targetW, targetH, label) {
+  return new Promise(resolve => {
+    if (lastImageData) URL.revokeObjectURL(lastImageData);
+    lastImageData = URL.createObjectURL(blob);
+    const fileSizeMB = (blob.size / (1024*1024)).toFixed(2);
+    const img = document.getElementById('resultImg');
+    img.onload = () => {
+      hideLoading();
+      document.getElementById('outputMeta').innerHTML = `
+        <div class="meta-item"><span class="meta-label">Mode</span><span class="meta-value">${label}</span></div>
+        <div class="meta-divider"></div>
+        <div class="meta-item"><span class="meta-label">Dimensions</span><span class="meta-value">${widthIn}" × ${heightIn}"</span></div>
+        <div class="meta-divider"></div>
+        <div class="meta-item"><span class="meta-label">Resolution</span><span class="meta-value">${selectedDPI} DPI</span></div>
+        <div class="meta-divider"></div>
+        <div class="meta-item"><span class="meta-label">Pixels</span><span class="meta-value">${targetW.toLocaleString()} × ${targetH.toLocaleString()}</span></div>
+        <div class="meta-divider"></div>
+        <div class="meta-item"><span class="meta-label">File Size</span><span class="meta-value">${fileSizeMB} MB</span></div>
+        <div class="meta-divider"></div>
+        <div class="meta-item"><span class="meta-label">Format</span><span class="meta-value">PNG · Archival</span></div>
+      `;
+      document.getElementById('resultWrapper').style.display = 'flex';
+      setStatus(`Ready — ${targetW.toLocaleString()}×${targetH.toLocaleString()}px · ${fileSizeMB} MB · ${selectedDPI} DPI`, 'success');
+      resolve();
+    };
+    img.src = lastImageData;
+  });
+}
+
+// ─── Loading helpers ──────────────────────────────────────────────────────────
+function showLoading(title) {
+  document.getElementById('emptyState').style.display    = 'none';
+  document.getElementById('resultWrapper').style.display = 'none';
+  document.getElementById('loadingTitle').textContent    = title;
+  document.getElementById('loadingOverlay').classList.add('active');
+  document.getElementById('generateBtn').disabled = true;
+}
+
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.remove('active');
+  document.getElementById('generateBtn').disabled = false;
+  if (document.getElementById('resultWrapper').style.display !== 'flex') {
+    document.getElementById('emptyState').style.display = 'block';
+  }
+}
+
+// ─── Download print ───────────────────────────────────────────────────────────
 function downloadPrint() {
   if (!lastImageData) return;
   const w = document.getElementById('widthIn').value;
   const h = document.getElementById('heightIn').value;
   const a = document.createElement('a');
-  a.href = lastImageData;
-  a.download = `giclee-print-${w}x${h}in-${selectedDPI}dpi-${Date.now()}.png`;
+  a.href     = lastImageData;
+  a.download = `atelier-${currentMode}-${w}x${h}in-${selectedDPI}dpi-${Date.now()}.png`;
   a.click();
 }
 
-// ─── Save for Web ─────────────────────────────────────────────────────────────
+// ─── Save for web ─────────────────────────────────────────────────────────────
 function saveForWeb() {
   if (!lastImageData) return;
+  const src = document.getElementById('resultImg');
+  const MAX = 1500;
+  const sw  = src.naturalWidth, sh = src.naturalHeight;
+  let ow, oh;
+  if (sw >= sh) { ow = Math.min(sw, MAX); oh = Math.round(ow * sh / sw); }
+  else          { oh = Math.min(sh, MAX); ow = Math.round(oh * sw / sh); }
 
-  const sourceImg = document.getElementById('resultImg');
-  const WEB_MAX = 1500; // max dimension in pixels
-
-  const srcW = sourceImg.naturalWidth;
-  const srcH = sourceImg.naturalHeight;
-
-  // Scale down to fit within 1500px on the long edge
-  let outW, outH;
-  if (srcW >= srcH) {
-    outW = Math.min(srcW, WEB_MAX);
-    outH = Math.round(outW * (srcH / srcW));
-  } else {
-    outH = Math.min(srcH, WEB_MAX);
-    outW = Math.round(outH * (srcW / srcH));
-  }
-
-  const canvas = document.createElement('canvas');
-  canvas.width = outW;
-  canvas.height = outH;
-  const ctx = canvas.getContext('2d');
+  const c = document.createElement('canvas');
+  c.width = ow; c.height = oh;
+  const ctx = c.getContext('2d');
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(sourceImg, 0, 0, outW, outH);
+  ctx.drawImage(src, 0, 0, ow, oh);
 
-  canvas.toBlob(blob => {
+  c.toBlob(blob => {
     if (!blob) return;
-    const sizekB = (blob.size / 1024).toFixed(0);
+    const kb  = (blob.size / 1024).toFixed(0);
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const w   = document.getElementById('widthIn').value;
+    const h   = document.getElementById('heightIn').value;
+    const a   = document.createElement('a');
     a.href = url;
-    const w = document.getElementById('widthIn').value;
-    const h = document.getElementById('heightIn').value;
-    a.download = `atelier-web-${w}x${h}in-${outW}x${outH}px.jpg`;
+    a.download = `atelier-web-${w}x${h}in-${ow}x${oh}px.jpg`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
-    setStatus(`Web export saved — ${outW}×${outH}px · ${sizekB} kB JPEG`, 'success');
+    setStatus(`Web export saved — ${ow}×${oh}px · ${kb} kB JPEG`, 'success');
     setTimeout(clearStatus, 3000);
   }, 'image/jpeg', 0.85);
 }
@@ -1229,10 +1133,13 @@ function copyPromptUsed() {
 // ─── Reset ────────────────────────────────────────────────────────────────────
 function resetCanvas() {
   document.getElementById('resultWrapper').style.display = 'none';
-  document.getElementById('emptyState').style.display = 'block';
+  document.getElementById('emptyState').style.display    = 'block';
   clearStatus();
   if (lastImageData) { URL.revokeObjectURL(lastImageData); lastImageData = null; }
 }
+
+// Init
+setMode('generate');
 </script>
 </body>
 </html>
