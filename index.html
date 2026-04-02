@@ -963,7 +963,7 @@ async function fetchImageWithRetry(prompt, w, h, seed) {
   const apiKey = document.getElementById('apiKey').value.trim();
   if (!apiKey) throw new Error('Please enter your Google AI API key from aistudio.google.com');
 
-  setLoadingStatus('Sending to Google Imagen…');
+  setLoadingStatus('Sending to Google Imagen 4…');
 
   // Determine closest aspect ratio
   const ratio = w / h;
@@ -974,9 +974,9 @@ async function fetchImageWithRetry(prompt, w, h, seed) {
   else if (ratio > 0.65) aspectRatio = '3:4';
   else                   aspectRatio = '9:16';
 
-  // Try Imagen 3 first
+  // Try Imagen 4 first (paid tier, highest quality)
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`;
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -988,16 +988,16 @@ async function fetchImageWithRetry(prompt, w, h, seed) {
     if (res.ok) {
       const data = await res.json();
       const b64 = data?.predictions?.[0]?.bytesBase64Encoded;
-      if (b64) return b64;
+      if (b64) { console.log('Imagen 4 success'); return b64; }
     }
     const errData = await res.json().catch(() => ({}));
-    console.warn('Imagen 3 failed:', errData?.error?.message);
-  } catch (e) { console.warn('Imagen 3 error:', e.message); }
+    console.warn('Imagen 4 failed:', errData?.error?.message);
+  } catch (e) { console.warn('Imagen 4 error:', e.message); }
 
-  // Fallback: Gemini 2.0 Flash image generation
-  setLoadingStatus('Trying Gemini Flash image output…');
+  // Fallback: Gemini 3.1 Flash image generation (latest native model)
+  setLoadingStatus('Trying Gemini 3.1 Flash image generation…');
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${apiKey}`;
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1016,7 +1016,7 @@ async function fetchImageWithRetry(prompt, w, h, seed) {
     const msg = errData?.error?.message || `HTTP ${res.status}`;
     throw new Error(`Google API: ${msg}`);
   } catch (e) {
-    throw new Error(`${e.message} — Double-check your key at aistudio.google.com → API Keys`);
+    throw new Error(`${e.message} — Check your key at aistudio.google.com → API Keys`);
   }
 }
 
