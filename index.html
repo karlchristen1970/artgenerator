@@ -118,6 +118,21 @@
     background: var(--border);
   }
 
+  /* API Key */
+  .api-section {
+    background: rgba(201,168,76,0.04);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 18px;
+  }
+
+  .api-note {
+    font-size: 10px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-top: 8px;
+  }
+
   /* Inputs */
   label {
     display: block;
@@ -635,6 +650,14 @@
   <!-- Control Panel -->
   <aside class="panel">
 
+    <!-- API Key -->
+    <div class="api-section">
+      <div class="section-label">Google AI API Key</div>
+      <label for="apiKey">Gemini API Key</label>
+      <input type="password" id="apiKey" placeholder="AIza..." autocomplete="off">
+      <div class="api-note">Free key from <strong>aistudio.google.com</strong> → Get API key. Never leaves your browser.</div>
+    </div>
+
     <!-- Canvas Size -->
     <div>
       <div class="section-label">Print Dimensions</div>
@@ -935,41 +958,66 @@ function applySharpen(ctx, imageData, w, h) {
   ctx.putImageData(imageData, 0, 0);
 }
 
-// ─── Fetch with retry — tries multiple Pollinations endpoints ─────────────────
+// ─── Generate image via Google Gemini Imagen API ─────────────────────────────
 async function fetchImageWithRetry(prompt, w, h, seed) {
-  const endpoints = [
-    () => `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${w}&height=${h}&model=flux&enhance=true&nologo=true&seed=${seed}`,
-    () => `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${w}&height=${h}&model=flux&nologo=true&seed=${seed+1}`,
-    () => `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${w}&height=${h}&model=turbo&nologo=true&seed=${seed}`,
-    () => `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${Math.round(w*0.75/8)*8}&height=${Math.round(h*0.75/8)*8}&model=flux&nologo=true&seed=${seed+2}`,
-  ];
+  const apiKey = document.getElementById('apiKey').value.trim();
+  if (!apiKey) throw new Error('Please enter your Google AI API key from aistudio.google.com');
 
-  for (let i = 0; i < endpoints.length; i++) {
-    const url = endpoints[i]();
-    setLoadingStatus(`Generating artwork… (attempt ${i+1} of ${endpoints.length})`);
-    try {
-      // Initial wait: longer on first attempt to let Flux render
-      await new Promise(r => setTimeout(r, i === 0 ? 8000 : 3000));
-      setLoadingStatus(`Fetching image… (attempt ${i+1})`);
+  setLoadingStatus('Sending to Google Imagen…');
 
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 45000);
-      const res = await fetch(url, { signal: controller.signal });
-      clearTimeout(timer);
+  // Determine closest aspect ratio
+  const ratio = w / h;
+  let aspectRatio;
+  if (ratio > 1.6)       aspectRatio = '16:9';
+  else if (ratio > 1.2)  aspectRatio = '4:3';
+  else if (ratio > 0.85) aspectRatio = '1:1';
+  else if (ratio > 0.65) aspectRatio = '3:4';
+  else                   aspectRatio = '9:16';
 
-      if (!res.ok) { console.warn(`Attempt ${i+1}: HTTP ${res.status}`); continue; }
-      const ct = res.headers.get('content-type') || '';
-      if (!ct.startsWith('image/')) { console.warn(`Attempt ${i+1}: bad content-type ${ct}`); continue; }
-
-      const blob = await res.blob();
-      if (blob.size < 10000) { console.warn(`Attempt ${i+1}: image too small (${blob.size}b)`); continue; }
-
-      return await blobToBase64(blob);
-    } catch (err) {
-      console.warn(`Attempt ${i+1} failed:`, err.message);
+  // Try Imagen 3 first
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        instances: [{ prompt }],
+        parameters: { sampleCount: 1, aspectRatio, safetyFilterLevel: 'block_few' }
+      })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const b64 = data?.predictions?.[0]?.bytesBase64Encoded;
+      if (b64) return b64;
     }
+    const errData = await res.json().catch(() => ({}));
+    console.warn('Imagen 3 failed:', errData?.error?.message);
+  } catch (e) { console.warn('Imagen 3 error:', e.message); }
+
+  // Fallback: Gemini 2.0 Flash image generation
+  setLoadingStatus('Trying Gemini Flash image output…');
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${apiKey}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { responseModalities: ['TEXT', 'IMAGE'] }
+      })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const parts = data?.candidates?.[0]?.content?.parts || [];
+      const imgPart = parts.find(p => p.inlineData?.mimeType?.startsWith('image/'));
+      if (imgPart) return imgPart.inlineData.data;
+    }
+    const errData = await res.json().catch(() => ({}));
+    const msg = errData?.error?.message || `HTTP ${res.status}`;
+    throw new Error(`Google API: ${msg}`);
+  } catch (e) {
+    throw new Error(`${e.message} — Double-check your key at aistudio.google.com → API Keys`);
   }
-  throw new Error('All generation attempts failed — Pollinations appears to be down. Please try again in a few minutes.');
 }
 
 function setLoadingStatus(msg) {
@@ -1044,7 +1092,7 @@ async function generatePrint() {
     apiW = Math.min(2048, Math.max(512, Math.round(apiW / 8) * 8));
     apiH = Math.min(2048, Math.max(512, Math.round(apiH / 8) * 8));
 
-    document.getElementById('loadingStatus').textContent = `Generating ${apiW}×${apiH}px artwork — takes 20–40 seconds…`;
+    document.getElementById('loadingStatus').textContent = `Generating ${apiW}×${apiH}px artwork…`;
 
     const seed = Math.floor(Math.random() * 999999);
     const imgBase64 = await fetchImageWithRetry(fullPrompt, apiW, apiH, seed);
