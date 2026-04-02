@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atelier — Giclée Print Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0e0c0a;
+    --parchment: #f4f0e8;
+    --warm-white: #faf8f4;
+    --gold: #c9a84c;
+    --gold-light: #e8d08a;
+    --gold-dim: #8a6f2e;
+    --charcoal: #2a2520;
+    --mid: #4a4540;
+    --muted: #7a7268;
+    --border: rgba(201,168,76,0.25);
+    --border-subtle: rgba(201,168,76,0.1);
+    --success: #6a9e6a;
+    --error: #c06060;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--ink);
+    color: var(--parchment);
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity: 0.35;
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* Header */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 28px 48px;
+    display: flex;
+    align-items: baseline;
+    gap: 20px;
+    background: linear-gradient(180deg, rgba(20,17,12,0.9) 0%, transparent 100%);
+  }
+
+  .logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    font-weight: 300;
+    letter-spacing: 0.12em;
+    color: var(--gold);
+  }
+
+  .logo-sub {
+    font-size: 10px;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .header-badge {
+    margin-left: auto;
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    border: 1px solid var(--border);
+    padding: 5px 12px;
+    border-radius: 2px;
+  }
+
+  /* Main layout */
+  .studio {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    min-height: calc(100vh - 85px);
+  }
+
+  /* Control Panel */
+  .panel {
+    border-right: 1px solid var(--border);
+    padding: 40px 36px;
+    background: rgba(14,12,10,0.6);
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    overflow-y: auto;
+    max-height: calc(100vh - 85px);
+  }
+
+  .section-label {
+    font-size: 9px;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Inputs */
+  label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="password"],
+  select,
+  textarea {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 3px;
+    color: var(--parchment);
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 300;
+    font-size: 13px;
+    padding: 10px 14px;
+    transition: border-color 0.2s, background 0.2s;
+    outline: none;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--gold);
+    background: rgba(201,168,76,0.06);
+  }
+
+  input[type="number"] { -moz-appearance: textfield; }
+  input[type="number"]::-webkit-inner-spin-button { opacity: 0; }
+
+  textarea {
+    resize: vertical;
+    min-height: 100px;
+    line-height: 1.6;
+  }
+
+  /* Size inputs row */
+  .size-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .size-x {
+    text-align: center;
+    color: var(--gold-dim);
+    font-size: 14px;
+    padding-top: 12px;
+  }
+
+  .size-hint {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 6px;
+    text-align: center;
+  }
+
+  /* DPI selector */
+  .dpi-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+
+  .dpi-btn {
+    background: transparent;
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 3px;
+    color: var(--muted);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    padding: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+
+  .dpi-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .dpi-btn.active {
+    background: rgba(201,168,76,0.12);
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  /* Style presets */
+  .presets-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .preset-btn {
+    background: transparent;
+    border: 1px solid rgba(201,168,76,0.15);
+    border-radius: 3px;
+    color: var(--muted);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    padding: 9px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    line-height: 1.4;
+  }
+
+  .preset-btn:hover {
+    border-color: var(--gold);
+    color: var(--parchment);
+    background: rgba(201,168,76,0.06);
+  }
+
+  .preset-btn.active {
+    border-color: var(--gold);
+    background: rgba(201,168,76,0.1);
+    color: var(--gold-light);
+  }
+
+  .preset-btn .preset-name {
+    font-weight: 500;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .preset-btn .preset-desc {
+    font-size: 9px;
+    opacity: 0.6;
+    line-height: 1.3;
+  }
+
+  /* Image upload */
+  .upload-zone {
+    border: 1px dashed rgba(201,168,76,0.3);
+    border-radius: 4px;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .upload-zone:hover {
+    border-color: var(--gold);
+    background: rgba(201,168,76,0.04);
+  }
+
+  .upload-zone.has-image {
+    border-style: solid;
+    border-color: var(--gold-dim);
+    padding: 12px;
+  }
+
+  .upload-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+    border: none;
+    padding: 0;
+    background: transparent;
+  }
+
+  .upload-icon {
+    font-size: 28px;
+    margin-bottom: 8px;
+    opacity: 0.5;
+  }
+
+  .upload-text {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .upload-preview {
+    width: 100%;
+    max-height: 120px;
+    object-fit: contain;
+    border-radius: 2px;
+    display: none;
+  }
+
+  .upload-filename {
+    font-size: 10px;
+    color: var(--gold-dim);
+    margin-top: 6px;
+    display: none;
+  }
+
+  /* Generate button */
+  .generate-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #c9a84c 0%, #8a6f2e 100%);
+    border: none;
+    border-radius: 3px;
+    color: var(--ink);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 400;
+    letter-spacing: 0.15em;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .generate-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .generate-btn:hover::before { opacity: 1; }
+  .generate-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(201,168,76,0.3); }
+  .generate-btn:active { transform: translateY(0); }
+  .generate-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* Canvas / Output area */
+  .canvas-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    position: relative;
+    background: radial-gradient(ellipse at center, rgba(42,37,32,0.4) 0%, transparent 70%);
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    opacity: 0.4;
+  }
+
+  .empty-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+    display: block;
+  }
+
+  .empty-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 300;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+  }
+
+  .empty-sub {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* Result */
+  .result-wrapper {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    width: 100%;
+  }
+
+  .result-frame {
+    position: relative;
+    box-shadow:
+      0 0 0 1px rgba(201,168,76,0.3),
+      0 4px 24px rgba(0,0,0,0.6),
+      0 16px 48px rgba(0,0,0,0.4);
+  }
+
+  .result-frame::before {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border: 1px solid rgba(201,168,76,0.1);
+    pointer-events: none;
+  }
+
+  .result-img {
+    display: block;
+    max-width: 100%;
+    max-height: calc(100vh - 300px);
+    object-fit: contain;
+  }
+
+  /* Output meta bar */
+  .output-meta {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    background: rgba(14,12,10,0.8);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px 24px;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+  }
+
+  .meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    align-items: center;
+  }
+
+  .meta-label {
+    color: var(--muted);
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+  }
+
+  .meta-value {
+    color: var(--gold);
+    font-size: 13px;
+    font-family: 'Cormorant Garamond', serif;
+  }
+
+  .meta-divider {
+    width: 1px;
+    height: 30px;
+    background: var(--border);
+  }
+
+  /* Download & actions */
+  .action-row {
+    display: flex;
+    gap: 12px;
+  }
+
+  .action-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--parchment);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .action-btn:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+    background: rgba(201,168,76,0.06);
+  }
+
+  .action-btn.primary {
+    background: rgba(201,168,76,0.1);
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  .action-btn.primary:hover {
+    background: rgba(201,168,76,0.2);
+  }
+
+  /* Loading overlay */
+  .loading-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(14,12,10,0.85);
+    z-index: 100;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+  }
+
+  .loading-overlay.active { display: flex; }
+
+  .spinner {
+    width: 48px;
+    height: 48px;
+    border: 1px solid rgba(201,168,76,0.2);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 1.2s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 300;
+    letter-spacing: 0.12em;
+    color: var(--gold);
+  }
+
+  .loading-sub {
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* Progress bar */
+  .progress-track {
+    width: 240px;
+    height: 1px;
+    background: rgba(201,168,76,0.15);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    height: 100%;
+    background: var(--gold);
+    animation: progress-anim 2.4s ease-in-out infinite;
+    transform-origin: left;
+  }
+
+  @keyframes progress-anim {
+    0% { transform: translateX(-100%) scaleX(0.3); }
+    50% { transform: translateX(60%) scaleX(0.6); }
+    100% { transform: translateX(200%) scaleX(0.3); }
+  }
+
+  /* Status messages */
+  .status-bar {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    padding: 8px 12px;
+    border-radius: 3px;
+    margin-top: -16px;
+    display: none;
+  }
+
+  .status-bar.error {
+    display: block;
+    background: rgba(192,96,96,0.1);
+    border: 1px solid rgba(192,96,96,0.3);
+    color: #e08080;
+  }
+
+  .status-bar.success {
+    display: block;
+    background: rgba(106,158,106,0.1);
+    border: 1px solid rgba(106,158,106,0.3);
+    color: #8ebe8e;
+  }
+
+  .status-bar.info {
+    display: block;
+    background: rgba(201,168,76,0.08);
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.2); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(201,168,76,0.4); }
+
+  /* Tooltip */
+  .tooltip {
+    font-size: 9px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-top: 4px;
+  }
+
+  .char-count {
+    font-size: 9px;
+    color: var(--muted);
+    text-align: right;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="logo">Atelier</span>
+  <span class="logo-sub">Giclée Print Studio</span>
+  <span class="header-badge">360 DPI · Museum Quality</span>
+</header>
+
+<div class="studio">
+
+  <!-- Control Panel -->
+  <aside class="panel">
+
+    <!-- Canvas Size -->
+    <div>
+      <div class="section-label">Print Dimensions</div>
+      <div class="size-row">
+        <div>
+          <label for="widthIn">Width (inches)</label>
+          <input type="number" id="widthIn" value="8" min="2" max="40" step="0.5">
+        </div>
+        <div class="size-x">×</div>
+        <div>
+          <label for="heightIn">Height (inches)</label>
+          <input type="number" id="heightIn" value="10" min="2" max="40" step="0.5">
+        </div>
+      </div>
+      <div class="size-hint" id="pixelDimHint">Loading…</div>
+
+      <!-- DPI -->
+      <div style="margin-top:20px">
+        <label>Output Resolution</label>
+        <div class="dpi-row">
+          <button class="dpi-btn" data-dpi="240">240 DPI</button>
+          <button class="dpi-btn active" data-dpi="300">300 DPI</button>
+          <button class="dpi-btn" data-dpi="360">360 DPI</button>
+        </div>
+        <div class="tooltip">300 DPI = gallery standard · 360 DPI = archival/fine art</div>
+      </div>
+    </div>
+
+    <!-- Style Presets -->
+    <div>
+      <div class="section-label">Painting Style</div>
+      <div class="presets-grid">
+        <button class="preset-btn active" data-style="oil">
+          <span class="preset-name">Oil</span>
+          <span class="preset-desc">Rich impasto, old masters depth</span>
+        </button>
+        <button class="preset-btn" data-style="watercolor">
+          <span class="preset-name">Watercolor</span>
+          <span class="preset-desc">Translucent washes, soft bloom</span>
+        </button>
+        <button class="preset-btn" data-style="acrylic">
+          <span class="preset-name">Acrylic</span>
+          <span class="preset-desc">Bold, saturated, contemporary</span>
+        </button>
+        <button class="preset-btn" data-style="pastel">
+          <span class="preset-name">Pastel</span>
+          <span class="preset-desc">Soft chalk, luminous matte</span>
+        </button>
+        <button class="preset-btn" data-style="charcoal">
+          <span class="preset-name">Charcoal</span>
+          <span class="preset-desc">Dramatic tonal, expressive</span>
+        </button>
+        <button class="preset-btn" data-style="digital">
+          <span class="preset-name">Digital</span>
+          <span class="preset-desc">Clean, crisp, high-contrast</span>
+        </button>
+        <button class="preset-btn" data-style="impressionist">
+          <span class="preset-name">Impressionist</span>
+          <span class="preset-desc">Broken color, painterly light</span>
+        </button>
+        <button class="preset-btn" data-style="photorealistic">
+          <span class="preset-name">Photorealistic</span>
+          <span class="preset-desc">Hyper-detailed, lifelike render</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Image reference upload -->
+    <div>
+      <div class="section-label">Reference Image <span style="font-size:9px;color:var(--muted);letter-spacing:0.1em;text-transform:none;font-family:Montserrat;font-weight:300">(optional)</span></div>
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="imageUpload" accept="image/*">
+        <div id="uploadPlaceholder">
+          <div class="upload-icon">🖼</div>
+          <div class="upload-text">Drop an image or click to browse<br><span style="font-size:9px;opacity:0.6">JPG, PNG, WEBP — used as style reference</span></div>
+        </div>
+        <img id="uploadPreview" class="upload-preview" alt="Reference">
+        <div id="uploadFilename" class="upload-filename"></div>
+      </div>
+    </div>
+
+    <!-- Painting Description -->
+    <div>
+      <div class="section-label">Painting Description</div>
+      <label for="paintDesc">Describe your artwork</label>
+      <textarea id="paintDesc" placeholder="e.g. A sweeping coastal cliffside at golden hour, waves crashing below, sea mist catching warm amber light, moody and atmospheric, reminiscent of Thomas Moran…" maxlength="1200"></textarea>
+      <div class="char-count" id="charCount">0 / 1200</div>
+    </div>
+
+    <!-- Status -->
+    <div id="statusBar" class="status-bar"></div>
+
+    <!-- Generate -->
+    <button class="generate-btn" id="generateBtn" onclick="generatePrint()">
+      Generate Giclée Print
+    </button>
+
+  </aside>
+
+  <!-- Output Canvas -->
+  <main class="canvas-area" id="canvasArea">
+
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="spinner"></div>
+      <div class="loading-text">Rendering your print…</div>
+      <div class="progress-track"><div class="progress-bar"></div></div>
+      <div class="loading-sub" id="loadingStatus">Generating composition</div>
+    </div>
+
+    <!-- Empty state -->
+    <div class="empty-state" id="emptyState">
+      <span class="empty-icon">✦</span>
+      <div class="empty-title">Your canvas awaits</div>
+      <div class="empty-sub">Configure & Generate to Render</div>
+    </div>
+
+    <!-- Result -->
+    <div class="result-wrapper" id="resultWrapper">
+      <div class="result-frame">
+        <img id="resultImg" class="result-img" alt="Generated giclée print">
+      </div>
+      <div class="output-meta" id="outputMeta"></div>
+      <div class="action-row">
+        <button class="action-btn primary" id="downloadBtn" onclick="downloadPrint()">
+          ⬇ Download PNG
+        </button>
+        <button class="action-btn" onclick="copyPromptUsed()">
+          ⊞ Copy Prompt
+        </button>
+        <button class="action-btn" onclick="resetCanvas()">
+          ↺ New Print
+        </button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ─── State ───────────────────────────────────────────────────────────────────
+let selectedDPI = 300;
+let selectedStyle = 'oil';
+let uploadedImageBase64 = null;
+let uploadedImageType = null;
+let lastPrompt = '';
+let lastImageData = null;
+
+// ─── DPI selector ────────────────────────────────────────────────────────────
+document.querySelectorAll('.dpi-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.dpi-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedDPI = parseInt(btn.dataset.dpi);
+    updateHint();
+  });
+});
+
+// ─── Style selector ──────────────────────────────────────────────────────────
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedStyle = btn.dataset.style;
+  });
+});
+
+// ─── Pixel hint ──────────────────────────────────────────────────────────────
+function updateHint() {
+  const w = parseFloat(document.getElementById('widthIn').value) || 0;
+  const h = parseFloat(document.getElementById('heightIn').value) || 0;
+  const px_w = Math.round(w * selectedDPI);
+  const px_h = Math.round(h * selectedDPI);
+  const approxMB = ((px_w * px_h * 3) / (1024 * 1024)).toFixed(1);
+  document.getElementById('pixelDimHint').textContent =
+    `${px_w.toLocaleString()} × ${px_h.toLocaleString()} px · ~${approxMB} MB uncompressed`;
+}
+
+document.getElementById('widthIn').addEventListener('input', updateHint);
+document.getElementById('heightIn').addEventListener('input', updateHint);
+updateHint();
+
+// ─── Char counter ─────────────────────────────────────────────────────────────
+document.getElementById('paintDesc').addEventListener('input', function() {
+  document.getElementById('charCount').textContent = `${this.value.length} / 1200`;
+});
+
+// ─── Image upload ─────────────────────────────────────────────────────────────
+document.getElementById('imageUpload').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    uploadedImageBase64 = ev.target.result.split(',')[1];
+    uploadedImageType = file.type;
+
+    const preview = document.getElementById('uploadPreview');
+    preview.src = ev.target.result;
+    preview.style.display = 'block';
+    document.getElementById('uploadFilename').textContent = file.name;
+    document.getElementById('uploadFilename').style.display = 'block';
+    document.getElementById('uploadPlaceholder').style.display = 'none';
+    document.getElementById('uploadZone').classList.add('has-image');
+  };
+  reader.readAsDataURL(file);
+});
+
+// ─── Status helper ────────────────────────────────────────────────────────────
+function setStatus(msg, type = 'info') {
+  const bar = document.getElementById('statusBar');
+  bar.textContent = msg;
+  bar.className = `status-bar ${type}`;
+}
+
+function clearStatus() {
+  document.getElementById('statusBar').className = 'status-bar';
+}
+
+// ─── Build Flux-optimized prompt ─────────────────────────────────────────────
+function buildPrompt(userDesc, style, widthIn, heightIn) {
+  const styleMap = {
+    oil: 'oil on canvas, impasto brushwork, layered glazes, old masters technique, luminous highlights, warm varnished finish, gallery painting',
+    watercolor: 'watercolor on cold press paper, wet-on-wet blooms, translucent washes, delicate granulation, white paper showing through, fine art',
+    acrylic: 'acrylic on canvas, bold saturated color, contemporary fine art, textured brushwork, strong contrast',
+    pastel: 'soft pastel on textured paper, chalky matte surface, blended tones, velvety finish, fine art pastel drawing',
+    charcoal: 'charcoal on paper, dramatic tonal range, expressive gestural marks, deep velvety blacks, blended mid-tones, fine art drawing',
+    digital: 'digital painting, concept art, cinematic lighting, crisp clean render, ultra detailed, sharp focus',
+    impressionist: 'impressionist oil painting, broken color, visible brushstrokes, plein air, Monet and Pissarro influence, painterly light',
+    photorealistic: 'hyperrealistic oil painting, photorealistic, ultra detailed, dramatic studio lighting, every texture rendered with absolute fidelity'
+  };
+
+  const styleKeywords = styleMap[style] || styleMap.oil;
+  const orientation = widthIn > heightIn ? 'landscape' : (heightIn > widthIn ? 'portrait' : 'square');
+
+  return `${userDesc}, ${styleKeywords}, museum quality fine art, giclée archival print, ${orientation} composition, rich tonal range, deep saturated color, highly detailed, masterpiece, exhibition quality, professional artwork`;
+}
+
+// ─── Scale image up via canvas ────────────────────────────────────────────────
+// The API returns ~1024px images; we tile-scale with sharpening to hit target resolution
+function scaleToGiclee(srcBase64, targetW, targetH, quality) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = targetW;
+      canvas.height = targetH;
+      const ctx = canvas.getContext('2d');
+
+      // Use high-quality image smoothing
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+
+      // Draw scaled
+      ctx.drawImage(img, 0, 0, targetW, targetH);
+
+      // Apply subtle unsharp-mask style sharpen via convolution
+      const imageData = ctx.getImageData(0, 0, targetW, targetH);
+      // Only sharpen if not too large (perf guard — skip for very large)
+      if (targetW * targetH < 12000000) {
+        applySharpen(ctx, imageData, targetW, targetH);
+      }
+
+      canvas.toBlob(blob => {
+        if (!blob) { reject(new Error('Canvas toBlob failed')); return; }
+        resolve(blob);
+      }, 'image/png');
+    };
+    img.onerror = () => reject(new Error('Image load failed'));
+    img.src = 'data:image/png;base64,' + srcBase64;
+  });
+}
+
+function applySharpen(ctx, imageData, w, h) {
+  // Mild sharpen kernel
+  const kernel = [
+     0, -0.3,    0,
+    -0.3, 2.2, -0.3,
+     0, -0.3,    0
+  ];
+  const src = new Uint8ClampedArray(imageData.data);
+  const dst = imageData.data;
+
+  for (let y = 1; y < h - 1; y++) {
+    for (let x = 1; x < w - 1; x++) {
+      const idx = (y * w + x) * 4;
+      for (let c = 0; c < 3; c++) {
+        let val = 0;
+        for (let ky = -1; ky <= 1; ky++) {
+          for (let kx = -1; kx <= 1; kx++) {
+            val += src[((y + ky) * w + (x + kx)) * 4 + c] * kernel[(ky + 1) * 3 + (kx + 1)];
+          }
+        }
+        dst[idx + c] = Math.min(255, Math.max(0, val));
+      }
+    }
+  }
+  ctx.putImageData(imageData, 0, 0);
+}
+
+// ─── Fetch with retry — tries multiple Pollinations endpoints ─────────────────
+async function fetchImageWithRetry(prompt, w, h, seed) {
+  const endpoints = [
+    () => `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${w}&height=${h}&model=flux&enhance=true&nologo=true&seed=${seed}`,
+    () => `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${w}&height=${h}&model=flux&nologo=true&seed=${seed+1}`,
+    () => `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${w}&height=${h}&model=turbo&nologo=true&seed=${seed}`,
+    () => `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${Math.round(w*0.75/8)*8}&height=${Math.round(h*0.75/8)*8}&model=flux&nologo=true&seed=${seed+2}`,
+  ];
+
+  for (let i = 0; i < endpoints.length; i++) {
+    const url = endpoints[i]();
+    setLoadingStatus(`Generating artwork… (attempt ${i+1} of ${endpoints.length})`);
+    try {
+      // Initial wait: longer on first attempt to let Flux render
+      await new Promise(r => setTimeout(r, i === 0 ? 8000 : 3000));
+      setLoadingStatus(`Fetching image… (attempt ${i+1})`);
+
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 45000);
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timer);
+
+      if (!res.ok) { console.warn(`Attempt ${i+1}: HTTP ${res.status}`); continue; }
+      const ct = res.headers.get('content-type') || '';
+      if (!ct.startsWith('image/')) { console.warn(`Attempt ${i+1}: bad content-type ${ct}`); continue; }
+
+      const blob = await res.blob();
+      if (blob.size < 10000) { console.warn(`Attempt ${i+1}: image too small (${blob.size}b)`); continue; }
+
+      return await blobToBase64(blob);
+    } catch (err) {
+      console.warn(`Attempt ${i+1} failed:`, err.message);
+    }
+  }
+  throw new Error('All generation attempts failed — Pollinations appears to be down. Please try again in a few minutes.');
+}
+
+function setLoadingStatus(msg) {
+  const el = document.getElementById('loadingStatus');
+  if (el) el.textContent = msg;
+}
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+// ─── Main generation ──────────────────────────────────────────────────────────
+async function generatePrint() {
+  clearStatus();
+
+  const desc = document.getElementById('paintDesc').value.trim();
+  if (!desc) {
+    setStatus('Please describe your painting.', 'error');
+    return;
+  }
+
+  const widthIn = parseFloat(document.getElementById('widthIn').value);
+  const heightIn = parseFloat(document.getElementById('heightIn').value);
+  if (!widthIn || !heightIn || widthIn < 2 || heightIn < 2) {
+    setStatus('Please enter valid dimensions (minimum 2 inches).', 'error');
+    return;
+  }
+
+  const targetW = Math.round(widthIn * selectedDPI);
+  const targetH = Math.round(heightIn * selectedDPI);
+
+  // Show loading
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('resultWrapper').style.display = 'none';
+  document.getElementById('loadingOverlay').classList.add('active');
+  document.getElementById('generateBtn').disabled = true;
+
+  const loadingSteps = [
+    'Composing the scene…',
+    'Rendering paint medium…',
+    'Building tonal range…',
+    'Refining fine details…',
+    'Optimizing color depth…',
+    'Preparing archival output…'
+  ];
+  let stepIdx = 0;
+  const stepInterval = setInterval(() => {
+    document.getElementById('loadingStatus').textContent = loadingSteps[stepIdx % loadingSteps.length];
+    stepIdx++;
+  }, 2800);
+
+  try {
+    // Build rich prompt for Flux image generation
+    const fullPrompt = buildPrompt(desc, selectedStyle, widthIn, heightIn);
+    lastPrompt = fullPrompt;
+
+    // Calculate aspect-correct API dimensions (Flux max ~1344 on long edge)
+    const aspectRatio = widthIn / heightIn;
+    let apiW, apiH;
+    if (aspectRatio >= 1) {
+      apiW = 1344;
+      apiH = Math.round(1344 / aspectRatio);
+    } else {
+      apiH = 1344;
+      apiW = Math.round(1344 * aspectRatio);
+    }
+    apiW = Math.min(2048, Math.max(512, Math.round(apiW / 8) * 8));
+    apiH = Math.min(2048, Math.max(512, Math.round(apiH / 8) * 8));
+
+    document.getElementById('loadingStatus').textContent = `Generating ${apiW}×${apiH}px artwork — takes 20–40 seconds…`;
+
+    const seed = Math.floor(Math.random() * 999999);
+    const imgBase64 = await fetchImageWithRetry(fullPrompt, apiW, apiH, seed);
+    clearInterval(stepInterval);
+
+    document.getElementById('loadingStatus').textContent = `Scaling to ${targetW.toLocaleString()}×${targetH.toLocaleString()}px @ ${selectedDPI} DPI…`;
+
+    // Scale to final giclée resolution with sharpening
+    document.getElementById('loadingStatus').textContent = 'Applying archival sharpening…';
+
+    let finalBlob;
+    // For very large outputs (>40MP), scale in two passes
+    if (targetW * targetH > 40000000) {
+      // Two-pass: intermediate then final
+      const midW = Math.round(targetW * 0.6);
+      const midH = Math.round(targetH * 0.6);
+      const midBlob = await scaleToGiclee(imgBase64, midW, midH);
+      const midBase64 = await new Promise((res, rej) => {
+        const reader = new FileReader();
+        reader.onload = e => res(e.target.result.split(',')[1]);
+        reader.onerror = rej;
+        reader.readAsDataURL(midBlob);
+      });
+      finalBlob = await scaleToGiclee(midBase64, targetW, targetH);
+    } else {
+      finalBlob = await scaleToGiclee(imgBase64, targetW, targetH);
+    }
+
+    document.getElementById('loadingStatus').textContent = 'Finalizing…';
+
+    // Store result
+    if (lastImageData) URL.revokeObjectURL(lastImageData);
+    lastImageData = URL.createObjectURL(finalBlob);
+
+    // Calculate final size
+    const fileSizeMB = (finalBlob.size / (1024 * 1024)).toFixed(2);
+
+    // Show result
+    const resultImg = document.getElementById('resultImg');
+    resultImg.src = lastImageData;
+    resultImg.onload = () => {
+      document.getElementById('loadingOverlay').classList.remove('active');
+
+      document.getElementById('outputMeta').innerHTML = `
+        <div class="meta-item">
+          <span class="meta-label">Dimensions</span>
+          <span class="meta-value">${widthIn}" × ${heightIn}"</span>
+        </div>
+        <div class="meta-divider"></div>
+        <div class="meta-item">
+          <span class="meta-label">Resolution</span>
+          <span class="meta-value">${selectedDPI} DPI</span>
+        </div>
+        <div class="meta-divider"></div>
+        <div class="meta-item">
+          <span class="meta-label">Pixels</span>
+          <span class="meta-value">${targetW.toLocaleString()} × ${targetH.toLocaleString()}</span>
+        </div>
+        <div class="meta-divider"></div>
+        <div class="meta-item">
+          <span class="meta-label">File Size</span>
+          <span class="meta-value">${fileSizeMB} MB</span>
+        </div>
+        <div class="meta-divider"></div>
+        <div class="meta-item">
+          <span class="meta-label">Format</span>
+          <span class="meta-value">PNG · Archival</span>
+        </div>
+      `;
+
+      document.getElementById('resultWrapper').style.display = 'flex';
+      setStatus(`Print ready — ${targetW.toLocaleString()}×${targetH.toLocaleString()}px · ${fileSizeMB} MB · ${selectedDPI} DPI`, 'success');
+    };
+
+  } catch (err) {
+    clearInterval(stepInterval);
+    document.getElementById('loadingOverlay').classList.remove('active');
+    document.getElementById('emptyState').style.display = 'block';
+    console.error(err);
+    setStatus(`Error: ${err.message}`, 'error');
+  }
+
+  document.getElementById('generateBtn').disabled = false;
+}
+
+// ─── Download ─────────────────────────────────────────────────────────────────
+function downloadPrint() {
+  if (!lastImageData) return;
+  const w = document.getElementById('widthIn').value;
+  const h = document.getElementById('heightIn').value;
+  const a = document.createElement('a');
+  a.href = lastImageData;
+  a.download = `giclee-print-${w}x${h}in-${selectedDPI}dpi-${Date.now()}.png`;
+  a.click();
+}
+
+// ─── Copy prompt ──────────────────────────────────────────────────────────────
+function copyPromptUsed() {
+  if (!lastPrompt) return;
+  navigator.clipboard.writeText(lastPrompt).then(() => {
+    setStatus('Prompt copied to clipboard.', 'success');
+    setTimeout(clearStatus, 2000);
+  });
+}
+
+// ─── Reset ────────────────────────────────────────────────────────────────────
+function resetCanvas() {
+  document.getElementById('resultWrapper').style.display = 'none';
+  document.getElementById('emptyState').style.display = 'block';
+  clearStatus();
+  if (lastImageData) { URL.revokeObjectURL(lastImageData); lastImageData = null; }
+}
+</script>
+</body>
+</html>
