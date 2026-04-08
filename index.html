@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -97,7 +96,6 @@
     max-height: calc(100vh - 85px);
   }
 
-  /* Mode toggle */
   .mode-toggle {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -233,7 +231,6 @@
   .preset-btn .preset-name { font-weight: 500; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; display: block; margin-bottom: 2px; }
   .preset-btn .preset-desc { font-size: 9px; opacity: 0.6; line-height: 1.3; }
 
-  /* Upload zones */
   .upload-zone {
     border: 1px dashed rgba(154,176,204,0.3);
     border-radius: 4px;
@@ -259,7 +256,6 @@
   .upload-preview { width: 100%; max-height: 160px; object-fit: contain; border-radius: 2px; display: none; }
   .upload-filename { font-size: 10px; color: var(--gold-dim); margin-top: 6px; display: none; }
 
-  /* Upscale method toggle */
   .method-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
   .method-btn {
@@ -291,7 +287,6 @@
     margin-top: 8px;
   }
 
-  /* Generate button */
   .generate-btn {
     width: 100%;
     background: linear-gradient(135deg, #9ab0cc 0%, #3a5a7a 100%);
@@ -317,7 +312,6 @@
   .generate-btn:active { transform: translateY(0); }
   .generate-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
 
-  /* Canvas area */
   .canvas-area {
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
@@ -377,7 +371,6 @@
   .action-btn.primary { background: rgba(154,176,204,0.1); border-color: var(--gold); color: var(--gold); }
   .action-btn.primary:hover { background: rgba(154,176,204,0.2); }
 
-  /* Loading overlay */
   .loading-overlay {
     display: none; position: absolute; inset: 0;
     background: rgba(8,13,24,0.85); z-index: 100;
@@ -436,7 +429,6 @@
 
   <aside class="panel">
 
-    <!-- Mode Toggle -->
     <div class="mode-toggle">
       <button class="mode-btn active" id="modeGenerate" onclick="setMode('generate')">
         <span class="mode-icon">✦</span>
@@ -448,7 +440,6 @@
       </button>
     </div>
 
-    <!-- API Key — shared -->
     <div class="api-section">
       <div class="section-label">Google AI API Key</div>
       <label for="apiKey">Gemini API Key</label>
@@ -459,7 +450,6 @@
       </div>
     </div>
 
-    <!-- GENERATE: Style Presets -->
     <div id="secStyles">
       <div class="section-label">Painting Style</div>
       <div class="presets-grid">
@@ -498,7 +488,6 @@
       </div>
     </div>
 
-    <!-- GENERATE: Reference Image -->
     <div id="secReference">
       <div class="section-label">Reference Image <span style="font-size:9px;color:var(--muted);letter-spacing:0.1em;text-transform:none;font-family:Montserrat;font-weight:300">(optional)</span></div>
       <div class="upload-zone" id="uploadZone">
@@ -512,7 +501,6 @@
       </div>
     </div>
 
-    <!-- GENERATE: Description -->
     <div id="secDescription">
       <div class="section-label">Painting Description <span id="descOptionalTag" style="display:none;font-size:9px;color:var(--muted);letter-spacing:0.1em;text-transform:none;font-family:Montserrat;font-weight:300">(optional — reference image loaded)</span></div>
       <label for="paintDesc">Describe your artwork</label>
@@ -520,7 +508,6 @@
       <div class="char-count" id="charCount">0 / 1200</div>
     </div>
 
-    <!-- UPSCALE: Source painting -->
     <div id="secUploadSource" class="hidden">
       <div class="section-label">Original Painting</div>
       <div class="upload-zone upload-zone-large" id="uploadZoneSource">
@@ -534,7 +521,6 @@
       </div>
     </div>
 
-    <!-- UPSCALE: Method -->
     <div id="secMethod" class="hidden">
       <div class="section-label">Upscale Method</div>
       <div class="method-toggle">
@@ -552,7 +538,6 @@
       </div>
     </div>
 
-    <!-- SHARED: Dimensions + DPI -->
     <div>
       <div class="section-label">Print Dimensions</div>
       <div class="size-row">
@@ -588,7 +573,6 @@
 
   </aside>
 
-  <!-- Output Canvas -->
   <main class="canvas-area" id="canvasArea">
 
     <div class="loading-overlay" id="loadingOverlay">
@@ -632,8 +616,8 @@ let refImageType   = null;
 let srcImageBase64 = null;
 let srcImageType   = null;
 
-let lastPrompt     = '';
-let lastImageData  = null;
+let lastPrompt    = '';
+let lastImageData = null;
 
 // ─── Mode switching ───────────────────────────────────────────────────────────
 function setMode(mode) {
@@ -648,7 +632,7 @@ function setMode(mode) {
   generateSections.forEach(id => document.getElementById(id).classList.toggle('hidden', mode !== 'generate'));
   upscaleSections.forEach(id  => document.getElementById(id).classList.toggle('hidden', mode !== 'upscale'));
 
-  document.getElementById('apiKeyNote').style.display   = mode === 'upscale' ? 'inline' : 'none';
+  document.getElementById('apiKeyNote').style.display    = mode === 'upscale' ? 'inline' : 'none';
   document.getElementById('copyPromptBtn').style.display = mode === 'generate' ? '' : 'none';
 
   document.getElementById('generateBtn').textContent =
@@ -706,11 +690,11 @@ document.querySelectorAll('.preset-btn').forEach(btn => {
 
 // ─── Pixel hint ───────────────────────────────────────────────────────────────
 function updateHint() {
-  const w   = parseFloat(document.getElementById('widthIn').value)  || 0;
-  const h   = parseFloat(document.getElementById('heightIn').value) || 0;
-  const pw  = Math.round(w * selectedDPI);
-  const ph  = Math.round(h * selectedDPI);
-  const mb  = ((pw * ph * 3) / (1024 * 1024)).toFixed(1);
+  const w  = parseFloat(document.getElementById('widthIn').value)  || 0;
+  const h  = parseFloat(document.getElementById('heightIn').value) || 0;
+  const pw = Math.round(w * selectedDPI);
+  const ph = Math.round(h * selectedDPI);
+  const mb = ((pw * ph * 3) / (1024 * 1024)).toFixed(1);
   document.getElementById('pixelDimHint').textContent =
     `${pw.toLocaleString()} × ${ph.toLocaleString()} px · ~${mb} MB uncompressed`;
 }
@@ -739,7 +723,6 @@ document.getElementById('imageUpload').addEventListener('change', function(e) {
     document.getElementById('uploadFilename').style.display  = 'block';
     document.getElementById('uploadPlaceholder').style.display = 'none';
     document.getElementById('uploadZone').classList.add('has-image');
-    // Mark description as optional
     document.getElementById('descOptionalTag').style.display = 'inline';
     document.getElementById('paintDesc').placeholder = 'Optional — describe any changes or additions to the reference (e.g. "make it more stormy", "add a figure in the foreground"). Leave blank to paint directly from the image.';
   };
@@ -856,7 +839,8 @@ async function twoPassScale(base64, targetW, targetH) {
   return scaleToGiclee(base64, targetW, targetH);
 }
 
-// ─── API: Gemini multimodal (image + text or text only) ───────────────────────
+// ─── API: Gemini multimodal ───────────────────────────────────────────────────
+// FIX: Updated to current valid model strings (gemini-3.1 never existed)
 async function fetchGeminiImage(prompt, imageBase64, imageMimeType, apiKey) {
   const parts = [];
   if (imageBase64 && imageMimeType) {
@@ -864,10 +848,9 @@ async function fetchGeminiImage(prompt, imageBase64, imageMimeType, apiKey) {
   }
   parts.push({ text: prompt });
 
-  // Try gemini-2.0-flash first
   const models = [
-    'gemini-2.0-flash-preview-image-generation',
-    'gemini-3.1-flash-image-preview'
+    'gemini-2.0-flash-exp-image-generation',
+    'gemini-2.0-flash-preview-image-generation'
   ];
 
   for (const model of models) {
@@ -885,7 +868,7 @@ async function fetchGeminiImage(prompt, imageBase64, imageMimeType, apiKey) {
         }
       );
       if (res.ok) {
-        const data  = await res.json();
+        const data   = await res.json();
         const parts2 = data?.candidates?.[0]?.content?.parts || [];
         const imgPart = parts2.find(p => p.inlineData?.mimeType?.startsWith('image/'));
         if (imgPart) { console.log(`${model} success`); return imgPart.inlineData.data; }
@@ -897,7 +880,7 @@ async function fetchGeminiImage(prompt, imageBase64, imageMimeType, apiKey) {
   throw new Error('All Gemini image models failed — check your API key at aistudio.google.com');
 }
 
-// ─── API: Imagen 4 (text only) ────────────────────────────────────────────────
+// ─── API: Imagen 4 (text-to-image) ───────────────────────────────────────────
 async function fetchImagen4(prompt, aspectRatio, apiKey) {
   try {
     setLoadingStatus('Sending to Google Imagen 4…');
