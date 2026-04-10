@@ -445,7 +445,7 @@
       <label for="apiKey">Gemini API Key</label>
       <input type="password" id="apiKey" placeholder="AIza..." autocomplete="off">
       <div class="api-note">
-        Free key from <strong>aistudio.google.com</strong> → Get API key. Never leaves your browser.
+        Paid-tier key from <strong>aistudio.google.com</strong> → Get API key. Never leaves your browser.
         <span id="apiKeyNote" style="display:none;color:var(--gold-dim)"><br>Not needed for Faithful upscale.</span>
       </div>
     </div>
@@ -534,7 +534,7 @@
         </button>
       </div>
       <div class="method-note" id="methodNote">
-        Your painting is scaled to the exact target resolution with a sharpening pass. Color, composition, and every brushstroke are preserved exactly as photographed.
+        Your painting is scaled to the exact target resolution with progressive multi-step upscaling and sharpening between each pass. Color, composition, and every brushstroke are preserved exactly as photographed.
       </div>
     </div>
 
@@ -649,8 +649,8 @@ function setMethod(method) {
     b.classList.toggle('active', b.dataset.method === method));
 
   document.getElementById('methodNote').textContent = method === 'faithful'
-    ? 'Your painting is scaled to the exact target resolution with a sharpening pass. Color, composition, and every brushstroke are preserved exactly as photographed.'
-    : 'Gemini analyzes your painting and reconstructs fine brushwork detail, sharpens edges, and improves tonal range — then scales to print resolution. Requires API key.';
+    ? 'Your painting is scaled to the exact target resolution with progressive multi-step upscaling and sharpening between each pass. Color, composition, and every brushstroke are preserved exactly as photographed.'
+    : 'Gemini analyzes your painting and reconstructs fine brushwork detail, sharpens edges, and improves tonal range — then scales to print resolution with progressive upscaling. Requires API key.';
 }
 
 // ─── DPI selector ─────────────────────────────────────────────────────────────
@@ -668,14 +668,16 @@ function updateDpiSmartHint() {
   const hint = document.getElementById('dpiSmartHint');
   if (selectedDPI === 150) {
     hint.style.display = 'block';
+    hint.style.color = 'var(--muted)';
     hint.innerHTML = '⚠ 150 DPI is suitable for proofing only. For any painting with fine brushwork, texture, or detail — use 240 or 300 DPI for print.';
   } else if (selectedDPI === 240) {
     hint.style.display = 'block';
+    hint.style.color = 'var(--muted)';
     hint.innerHTML = '✓ 240 DPI is solid for most prints up to 16×20". For highly detailed work or prints smaller than 8×10", consider 300 DPI.';
   } else {
     hint.style.display = 'block';
-    hint.innerHTML = '✦ 300 DPI — archival quality. Recommended for detailed brushwork, small prints, or any work destined for a professional printer.';
     hint.style.color = 'var(--gold-dim)';
+    hint.innerHTML = '✦ 300 DPI — archival quality. Recommended for detailed brushwork, small prints, or any work destined for a professional printer.';
   }
 }
 
@@ -779,68 +781,229 @@ function buildPrompt(userDesc, style, widthIn, heightIn) {
   return `${userDesc}, ${keywords}, museum quality fine art, giclée archival print, ${orientation} composition, rich tonal range, deep saturated color, highly detailed, masterpiece, exhibition quality, professional artwork, ${noFrame}`;
 }
 
-// ─── Canvas scale + sharpen ───────────────────────────────────────────────────
-function scaleToGiclee(srcBase64, targetW, targetH) {
+// ═══════════════════════════════════════════════════════════════════════════════
+// REWORKED OUTPUT PIPELINE — Progressive upscale, lossless, no compression
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Decode a base64 image into an ImageBitmap (or Image) at its native resolution.
+ * This avoids any re-encoding — we work with raw pixel data from here.
+ */
+function decodeBase64ToImage(base64, mimeType) {
   return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = targetW; canvas.height = targetH;
-      const ctx = canvas.getContext('2d');
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(img, 0, 0, targetW, targetH);
-      const imageData = ctx.getImageData(0, 0, targetW, targetH);
-      if (targetW * targetH < 12000000) applySharpen(ctx, imageData, targetW, targetH);
-      canvas.toBlob(blob => {
-        if (!blob) { reject(new Error('Canvas toBlob failed')); return; }
-        resolve(blob);
-      }, 'image/png');
-    };
-    img.onerror = () => reject(new Error('Image load failed'));
-    img.src = 'data:image/png;base64,' + srcBase64;
+    const binary = atob(base64);
+    const bytes  = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const blob = new Blob([bytes], { type: mimeType || 'image/png' });
+
+    // Try ImageBitmap first (no re-encode, exact pixels)
+    if (typeof createImageBitmap === 'function') {
+      createImageBitmap(blob).then(resolve).catch(() => {
+        // Fallback to Image element
+        const img = new Image();
+        img.onload  = () => resolve(img);
+        img.onerror = () => reject(new Error('Image decode failed'));
+        img.src = URL.createObjectURL(blob);
+      });
+    } else {
+      const img = new Image();
+      img.onload  = () => { URL.revokeObjectURL(img.src); resolve(img); };
+      img.onerror = () => reject(new Error('Image decode failed'));
+      img.src = URL.createObjectURL(blob);
+    }
   });
 }
 
-function applySharpen(ctx, imageData, w, h) {
-  const kernel = [0, -0.3, 0, -0.3, 2.2, -0.3, 0, -0.3, 0];
-  const src = new Uint8ClampedArray(imageData.data);
-  const dst = imageData.data;
-  for (let y = 1; y < h - 1; y++) {
-    for (let x = 1; x < w - 1; x++) {
-      const idx = (y * w + x) * 4;
-      for (let c = 0; c < 3; c++) {
-        let val = 0;
-        for (let ky = -1; ky <= 1; ky++)
-          for (let kx = -1; kx <= 1; kx++)
-            val += src[((y+ky)*w+(x+kx))*4+c] * kernel[(ky+1)*3+(kx+1)];
-        dst[idx+c] = Math.min(255, Math.max(0, val));
+/**
+ * Unsharp Mask — much better than the old 3x3 kernel.
+ * Creates a blurred copy, then amplifies the difference (detail).
+ * amount: strength (0.3–1.0 typical), radius: blur radius in px, threshold: noise gate
+ */
+function unsharpMask(ctx, w, h, amount = 0.6, radius = 1, threshold = 2) {
+  const src = ctx.getImageData(0, 0, w, h);
+  const srcData = new Uint8ClampedArray(src.data);
+
+  // Approximate Gaussian blur using two-pass box blur
+  const blurred = new Uint8ClampedArray(src.data);
+  boxBlurPass(blurred, w, h, radius);
+  boxBlurPass(blurred, w, h, radius);
+
+  const dst = src.data;
+  for (let i = 0; i < dst.length; i += 4) {
+    for (let c = 0; c < 3; c++) {
+      const diff = srcData[i + c] - blurred[i + c];
+      if (Math.abs(diff) >= threshold) {
+        dst[i + c] = Math.min(255, Math.max(0, srcData[i + c] + diff * amount));
       }
     }
+    // Alpha channel untouched
   }
-  ctx.putImageData(imageData, 0, 0);
+  ctx.putImageData(src, 0, 0);
 }
 
-function blobToBase64(blob) {
-  return new Promise((res, rej) => {
-    const r = new FileReader();
-    r.onload = e => res(e.target.result.split(',')[1]);
-    r.onerror = rej;
-    r.readAsDataURL(blob);
+/** Simple horizontal+vertical box blur pass */
+function boxBlurPass(data, w, h, r) {
+  const tmp = new Uint8ClampedArray(data.length);
+  const diam = r * 2 + 1;
+
+  // Horizontal pass
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      let rr = 0, gg = 0, bb = 0, count = 0;
+      for (let dx = -r; dx <= r; dx++) {
+        const sx = Math.min(w - 1, Math.max(0, x + dx));
+        const idx = (y * w + sx) * 4;
+        rr += data[idx]; gg += data[idx+1]; bb += data[idx+2];
+        count++;
+      }
+      const idx = (y * w + x) * 4;
+      tmp[idx]   = rr / count;
+      tmp[idx+1] = gg / count;
+      tmp[idx+2] = bb / count;
+      tmp[idx+3] = data[idx+3];
+    }
+  }
+
+  // Vertical pass
+  for (let x = 0; x < w; x++) {
+    for (let y = 0; y < h; y++) {
+      let rr = 0, gg = 0, bb = 0, count = 0;
+      for (let dy = -r; dy <= r; dy++) {
+        const sy = Math.min(h - 1, Math.max(0, y + dy));
+        const idx = (sy * w + x) * 4;
+        rr += tmp[idx]; gg += tmp[idx+1]; bb += tmp[idx+2];
+        count++;
+      }
+      const idx = (y * w + x) * 4;
+      data[idx]   = rr / count;
+      data[idx+1] = gg / count;
+      data[idx+2] = bb / count;
+    }
+  }
+}
+
+/**
+ * Single upscale step: draw source onto a canvas at targetW×targetH,
+ * then apply unsharp mask to recover edge detail lost in interpolation.
+ * Returns the canvas (not a blob — no re-encoding between steps).
+ */
+function upscaleStep(source, targetW, targetH, sharpenAmount = 0.5) {
+  const canvas = document.createElement('canvas');
+  canvas.width  = targetW;
+  canvas.height = targetH;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+  // Use highest quality interpolation
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(source, 0, 0, targetW, targetH);
+
+  // Sharpen to recover detail lost in the scale step
+  // Stronger sharpening for larger scale jumps
+  const scaleRatio = targetW / (source.width || source.naturalWidth || targetW);
+  const adaptiveAmount = Math.min(0.9, sharpenAmount * Math.max(1, scaleRatio * 0.6));
+  const adaptiveRadius = scaleRatio > 1.8 ? 2 : 1;
+
+  unsharpMask(ctx, targetW, targetH, adaptiveAmount, adaptiveRadius, 2);
+
+  return canvas;
+}
+
+/**
+ * Progressive multi-step upscale: never scale more than ~1.8x per step.
+ * This preserves dramatically more detail than a single massive jump.
+ * Each intermediate step gets sharpened before feeding into the next.
+ *
+ * Returns: { canvas, steps } where canvas is the final full-res canvas.
+ */
+function progressiveUpscale(source, targetW, targetH, onStep) {
+  const srcW = source.width || source.naturalWidth;
+  const srcH = source.height || source.naturalHeight;
+
+  // If target is smaller or equal, just do one step (downscale or 1:1)
+  if (targetW <= srcW && targetH <= srcH) {
+    const canvas = upscaleStep(source, targetW, targetH, 0.3);
+    return { canvas, steps: 1 };
+  }
+
+  // Calculate how many steps we need (max ~1.8x per step)
+  const MAX_STEP_RATIO = 1.8;
+  const totalRatio = Math.max(targetW / srcW, targetH / srcH);
+  const numSteps   = Math.max(1, Math.ceil(Math.log(totalRatio) / Math.log(MAX_STEP_RATIO)));
+
+  let current = source;
+  let curW = srcW, curH = srcH;
+
+  for (let i = 0; i < numSteps; i++) {
+    const isLast = (i === numSteps - 1);
+    let stepW, stepH;
+
+    if (isLast) {
+      stepW = targetW;
+      stepH = targetH;
+    } else {
+      // Calculate intermediate size (geometric progression)
+      const progress = (i + 1) / numSteps;
+      stepW = Math.round(srcW * Math.pow(targetW / srcW, progress));
+      stepH = Math.round(srcH * Math.pow(targetH / srcH, progress));
+    }
+
+    if (onStep) onStep(i + 1, numSteps, stepW, stepH);
+
+    // Slightly stronger sharpening on intermediate steps, lighter on final
+    const sharpness = isLast ? 0.4 : 0.55;
+    current = upscaleStep(current, stepW, stepH, sharpness);
+    curW = stepW;
+    curH = stepH;
+  }
+
+  return { canvas: current, steps: numSteps };
+}
+
+/**
+ * Export a canvas to a lossless PNG Blob.
+ * Canvas.toBlob with 'image/png' is inherently lossless (PNG uses DEFLATE,
+ * which is lossless compression — no quality loss, only file-size reduction).
+ */
+function canvasToLosslessPNG(canvas) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(blob => {
+      if (!blob) { reject(new Error('PNG export failed')); return; }
+      resolve(blob);
+    }, 'image/png');
   });
 }
 
-async function twoPassScale(base64, targetW, targetH) {
-  if (targetW * targetH > 40000000) {
-    const midBlob = await scaleToGiclee(base64, Math.round(targetW*0.6), Math.round(targetH*0.6));
-    return scaleToGiclee(await blobToBase64(midBlob), targetW, targetH);
-  }
-  return scaleToGiclee(base64, targetW, targetH);
+/**
+ * Main pipeline: decode → progressive upscale → lossless PNG export.
+ * This replaces both scaleToGiclee() and twoPassScale() from the old code.
+ */
+async function upscaleToGiclee(base64, mimeType, targetW, targetH) {
+  // Step 1: Decode to raw pixels (no re-encoding)
+  setLoadingStatus('Decoding source image…');
+  const source = await decodeBase64ToImage(base64, mimeType);
+
+  const srcW = source.width || source.naturalWidth;
+  const srcH = source.height || source.naturalHeight;
+  console.log(`Source: ${srcW}×${srcH} → Target: ${targetW}×${targetH}`);
+
+  // Step 2: Progressive upscale with per-step sharpening
+  const { canvas, steps } = progressiveUpscale(source, targetW, targetH, (step, total, w, h) => {
+    setLoadingStatus(`Upscale pass ${step}/${total} → ${w.toLocaleString()}×${h.toLocaleString()}px…`);
+  });
+
+  console.log(`Progressive upscale complete in ${steps} step(s)`);
+
+  // Step 3: Export as lossless PNG
+  setLoadingStatus('Exporting lossless PNG…');
+  const blob = await canvasToLosslessPNG(canvas);
+
+  console.log(`Output: ${targetW}×${targetH}, ${(blob.size / 1048576).toFixed(2)} MB PNG (lossless)`);
+  return blob;
 }
 
+
 // ─── API: Gemini multimodal ───────────────────────────────────────────────────
-// FIX: Updated to current valid model strings (gemini-3.1 never existed)
 async function fetchGeminiImage(prompt, imageBase64, imageMimeType, apiKey) {
   const parts = [];
   if (imageBase64 && imageMimeType) {
@@ -848,16 +1011,17 @@ async function fetchGeminiImage(prompt, imageBase64, imageMimeType, apiKey) {
   }
   parts.push({ text: prompt });
 
+  // Current valid Gemini image-generation models
   const models = [
-   'gemini-2.5-flash-image',
-'gemini-3.1-flash-image-preview'
+    'gemini-2.0-flash-exp',
+    'gemini-2.0-flash'
   ];
 
   for (const model of models) {
     try {
       setLoadingStatus(`Sending to ${model}…`);
       const res = await fetch(
-       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -871,7 +1035,10 @@ async function fetchGeminiImage(prompt, imageBase64, imageMimeType, apiKey) {
         const data   = await res.json();
         const parts2 = data?.candidates?.[0]?.content?.parts || [];
         const imgPart = parts2.find(p => p.inlineData?.mimeType?.startsWith('image/'));
-        if (imgPart) { console.log(`${model} success`); return imgPart.inlineData.data; }
+        if (imgPart) {
+          console.log(`${model} success — got ${imgPart.inlineData.mimeType}`);
+          return { data: imgPart.inlineData.data, mimeType: imgPart.inlineData.mimeType };
+        }
       }
       const err = await res.json().catch(() => ({}));
       console.warn(`${model} failed:`, err?.error?.message);
@@ -898,7 +1065,11 @@ async function fetchImagen4(prompt, aspectRatio, apiKey) {
     if (res.ok) {
       const data = await res.json();
       const b64  = data?.predictions?.[0]?.bytesBase64Encoded;
-      if (b64) { console.log('Imagen 4 success'); return b64; }
+      if (b64) {
+        console.log('Imagen 4 success');
+        // Imagen 4 returns PNG
+        return { data: b64, mimeType: 'image/png' };
+      }
     }
     const err = await res.json().catch(() => ({}));
     console.warn('Imagen 4 failed:', err?.error?.message);
@@ -941,23 +1112,23 @@ async function runGenerate() {
     );
     lastPrompt = fullPrompt;
 
-    let imgBase64;
+    let result; // { data: base64, mimeType: string }
 
     if (refImageBase64) {
-      // Image-to-painting: send photo + prompt to Gemini
       const paintPrompt = `Using this image as your composition and subject reference, create: ${fullPrompt}. Interpret it faithfully in the specified painting style — do not simply reproduce the photograph, paint it as a fine art work.`;
-      imgBase64 = await fetchGeminiImage(paintPrompt, refImageBase64, refImageType, apiKey);
+      result = await fetchGeminiImage(paintPrompt, refImageBase64, refImageType, apiKey);
     } else {
-      // Text-to-image: try Imagen 4 first, fall back to Gemini
       const ratio = widthIn / heightIn;
       const ar = ratio > 1.6 ? '16:9' : ratio > 1.2 ? '4:3' : ratio > 0.85 ? '1:1' : ratio > 0.65 ? '3:4' : '9:16';
-      imgBase64 = await fetchImagen4(fullPrompt, ar, apiKey);
-      if (!imgBase64) imgBase64 = await fetchGeminiImage(fullPrompt, null, null, apiKey);
+      result = await fetchImagen4(fullPrompt, ar, apiKey);
+      if (!result) result = await fetchGeminiImage(fullPrompt, null, null, apiKey);
     }
 
     clearInterval(timer);
+
+    // Use the new progressive pipeline
     setLoadingStatus(`Scaling to ${targetW.toLocaleString()}×${targetH.toLocaleString()}px @ ${selectedDPI} DPI…`);
-    const finalBlob = await twoPassScale(imgBase64, targetW, targetH);
+    const finalBlob = await upscaleToGiclee(result.data, result.mimeType, targetW, targetH);
     await showResult(finalBlob, widthIn, heightIn, targetW, targetH, 'Generated');
 
   } catch(err) {
@@ -982,9 +1153,8 @@ async function runUpscale() {
 
   if (selectedMethod === 'faithful') {
     showLoading('Upscaling your painting…');
-    setLoadingStatus(`Scaling to ${targetW.toLocaleString()}×${targetH.toLocaleString()}px…`);
     try {
-      const blob = await twoPassScale(srcImageBase64, targetW, targetH);
+      const blob = await upscaleToGiclee(srcImageBase64, srcImageType || 'image/png', targetW, targetH);
       await showResult(blob, widthIn, heightIn, targetW, targetH, 'Faithful Upscale');
     } catch(err) { hideLoading(); setStatus(`Error: ${err.message}`, 'error'); }
 
@@ -1001,8 +1171,7 @@ async function runUpscale() {
       const enhancePrompt = `This is a photograph of an original fine art painting. Enhance it for archival giclée print reproduction: sharpen brushwork and paint texture, improve tonal depth and color richness, recover photographic detail loss — while faithfully preserving the exact composition, color palette, subject matter, and artistic character. Do not add new elements or change the style. Output the enhanced painting.`;
       const enhanced = await fetchGeminiImage(enhancePrompt, srcImageBase64, srcImageType, apiKey);
       clearInterval(timer);
-      setLoadingStatus(`Scaling to ${targetW.toLocaleString()}×${targetH.toLocaleString()}px…`);
-      const blob = await twoPassScale(enhanced, targetW, targetH);
+      const blob = await upscaleToGiclee(enhanced.data, enhanced.mimeType, targetW, targetH);
       await showResult(blob, widthIn, heightIn, targetW, targetH, 'AI Enhanced Upscale');
     } catch(err) {
       clearInterval(timer);
@@ -1033,10 +1202,10 @@ function showResult(blob, widthIn, heightIn, targetW, targetH, label) {
         <div class="meta-divider"></div>
         <div class="meta-item"><span class="meta-label">File Size</span><span class="meta-value">${fileSizeMB} MB</span></div>
         <div class="meta-divider"></div>
-        <div class="meta-item"><span class="meta-label">Format</span><span class="meta-value">PNG · Archival</span></div>
+        <div class="meta-item"><span class="meta-label">Format</span><span class="meta-value">PNG · Lossless</span></div>
       `;
       document.getElementById('resultWrapper').style.display = 'flex';
-      setStatus(`Ready — ${targetW.toLocaleString()}×${targetH.toLocaleString()}px · ${fileSizeMB} MB · ${selectedDPI} DPI`, 'success');
+      setStatus(`Ready — ${targetW.toLocaleString()}×${targetH.toLocaleString()}px · ${fileSizeMB} MB · ${selectedDPI} DPI · Lossless PNG`, 'success');
       resolve();
     };
     img.src = lastImageData;
@@ -1060,7 +1229,7 @@ function hideLoading() {
   }
 }
 
-// ─── Download print ───────────────────────────────────────────────────────────
+// ─── Download print (lossless PNG — no re-encoding) ──────────────────────────
 function downloadPrint() {
   if (!lastImageData) return;
   const w = document.getElementById('widthIn').value;
@@ -1071,7 +1240,7 @@ function downloadPrint() {
   a.click();
 }
 
-// ─── Save for web ─────────────────────────────────────────────────────────────
+// ─── Save for web (intentional lossy JPEG for web use) ───────────────────────
 function saveForWeb() {
   if (!lastImageData) return;
   const src = document.getElementById('resultImg');
@@ -1099,9 +1268,9 @@ function saveForWeb() {
     a.download = `atelier-web-${w}x${h}in-${ow}x${oh}px.jpg`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
-    setStatus(`Web export saved — ${ow}×${oh}px · ${kb} kB JPEG`, 'success');
+    setStatus(`Web export saved — ${ow}×${oh}px · ${kb} kB JPEG (lossy, web-optimized)`, 'success');
     setTimeout(clearStatus, 3000);
-  }, 'image/jpeg', 0.85);
+  }, 'image/jpeg', 0.88);
 }
 
 // ─── Copy prompt ──────────────────────────────────────────────────────────────
@@ -1123,6 +1292,7 @@ function resetCanvas() {
 
 // Init
 setMode('generate');
+updateDpiSmartHint();
 </script>
 </body>
 </html>
