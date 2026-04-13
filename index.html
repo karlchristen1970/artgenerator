@@ -190,7 +190,7 @@
   .size-x { text-align: center; color: var(--gold-dim); font-size: 14px; padding-top: 12px; }
   .size-hint { font-size: 10px; color: var(--muted); margin-top: 6px; text-align: center; }
 
-  .dpi-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .dpi-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; }
 
   .dpi-btn {
     background: transparent;
@@ -422,7 +422,7 @@
 <header>
   <span class="logo">Atelier</span>
   <span class="logo-sub">Giclée Print Studio</span>
-  <span class="header-badge">300 DPI · Museum Quality</span>
+  <span class="header-badge">340 DPI · Museum Quality</span>
 </header>
 
 <div class="studio">
@@ -504,8 +504,8 @@
     <div id="secDescription">
       <div class="section-label">Painting Description <span id="descOptionalTag" style="display:none;font-size:9px;color:var(--muted);letter-spacing:0.1em;text-transform:none;font-family:Montserrat;font-weight:300">(optional — reference image loaded)</span></div>
       <label for="paintDesc">Describe your artwork</label>
-      <textarea id="paintDesc" placeholder="e.g. A sweeping coastal cliffside at golden hour, waves crashing below, sea mist catching warm amber light, moody and atmospheric, reminiscent of Thomas Moran…" maxlength="1200"></textarea>
-      <div class="char-count" id="charCount">0 / 1200</div>
+      <textarea id="paintDesc" placeholder="e.g. A sweeping coastal cliffside at golden hour, waves crashing below, sea mist catching warm amber light, moody and atmospheric, reminiscent of Thomas Moran…" maxlength="2500"></textarea>
+      <div class="char-count" id="charCount">0 / 2500</div>
     </div>
 
     <div id="secUploadSource" class="hidden">
@@ -559,8 +559,9 @@
           <button class="dpi-btn" data-dpi="150">150 DPI</button>
           <button class="dpi-btn active" data-dpi="240">240 DPI</button>
           <button class="dpi-btn" data-dpi="300">300 DPI</button>
+          <button class="dpi-btn" data-dpi="340">340 DPI</button>
         </div>
-        <div class="tooltip">150 DPI = draft/proof · 240 DPI = print standard · 300 DPI = archival/fine art</div>
+        <div class="tooltip">150 DPI = draft/proof · 240 DPI = print standard · 300 DPI = archival · 340 DPI = ultra fine art</div>
         <div id="dpiSmartHint" style="font-size:10px;margin-top:8px;padding:8px 10px;border-radius:3px;background:rgba(154,176,204,0.06);border:1px solid var(--border-subtle);color:var(--muted);display:none;line-height:1.5;"></div>
       </div>
     </div>
@@ -619,6 +620,10 @@ let srcImageType   = null;
 let lastPrompt    = '';
 let lastImageData = null;
 
+// Track the native resolution of the last API response for the meta panel
+let lastSourceW = 0;
+let lastSourceH = 0;
+
 // ─── Mode switching ───────────────────────────────────────────────────────────
 function setMode(mode) {
   currentMode = mode;
@@ -674,10 +679,16 @@ function updateDpiSmartHint() {
     hint.style.display = 'block';
     hint.style.color = 'var(--muted)';
     hint.innerHTML = '✓ 240 DPI is solid for most prints up to 16×20". For highly detailed work or prints smaller than 8×10", consider 300 DPI.';
-  } else {
+  } else if (selectedDPI === 300) {
     hint.style.display = 'block';
     hint.style.color = 'var(--gold-dim)';
     hint.innerHTML = '✦ 300 DPI — archival quality. Recommended for detailed brushwork, small prints, or any work destined for a professional printer.';
+  } else if (selectedDPI === 340) {
+    hint.style.display = 'block';
+    hint.style.color = 'var(--gold)';
+    hint.innerHTML = '✦✦ 340 DPI — ultra fine art. Maximum resolution for exhibition prints, miniature work, or large format prints requiring microscopic detail.';
+  } else {
+    hint.style.display = 'none';
   }
 }
 
@@ -707,7 +718,7 @@ updateHint();
 
 // ─── Char counter ─────────────────────────────────────────────────────────────
 document.getElementById('paintDesc').addEventListener('input', function() {
-  document.getElementById('charCount').textContent = `${this.value.length} / 1200`;
+  document.getElementById('charCount').textContent = `${this.value.length} / 2500`;
 });
 
 // ─── Reference image upload (generate) ───────────────────────────────────────
@@ -782,12 +793,12 @@ function buildPrompt(userDesc, style, widthIn, heightIn) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// REWORKED OUTPUT PIPELINE — Progressive upscale, lossless, no compression
+// OUTPUT PIPELINE — Progressive upscale, lossless, no compression
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Decode a base64 image into an ImageBitmap (or Image) at its native resolution.
- * This avoids any re-encoding — we work with raw pixel data from here.
+ * Decode a base64 image string directly to a Blob, then to an ImageBitmap/Image.
+ * Bypasses any canvas re-encoding — raw pixel data only.
  */
 function decodeBase64ToImage(base64, mimeType) {
   return new Promise((resolve, reject) => {
@@ -796,10 +807,8 @@ function decodeBase64ToImage(base64, mimeType) {
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
     const blob = new Blob([bytes], { type: mimeType || 'image/png' });
 
-    // Try ImageBitmap first (no re-encode, exact pixels)
     if (typeof createImageBitmap === 'function') {
       createImageBitmap(blob).then(resolve).catch(() => {
-        // Fallback to Image element
         const img = new Image();
         img.onload  = () => resolve(img);
         img.onerror = () => reject(new Error('Image decode failed'));
@@ -815,19 +824,15 @@ function decodeBase64ToImage(base64, mimeType) {
 }
 
 /**
- * Unsharp Mask — much better than the old 3x3 kernel.
- * Creates a blurred copy, then amplifies the difference (detail).
- * amount: strength (0.3–1.0 typical), radius: blur radius in px, threshold: noise gate
+ * Unsharp Mask using two-pass box blur approximation.
+ * amount: 0.3–1.0, radius: px, threshold: noise gate
  */
 function unsharpMask(ctx, w, h, amount = 0.6, radius = 1, threshold = 2) {
   const src = ctx.getImageData(0, 0, w, h);
   const srcData = new Uint8ClampedArray(src.data);
-
-  // Approximate Gaussian blur using two-pass box blur
   const blurred = new Uint8ClampedArray(src.data);
   boxBlurPass(blurred, w, h, radius);
   boxBlurPass(blurred, w, h, radius);
-
   const dst = src.data;
   for (let i = 0; i < dst.length; i += 4) {
     for (let c = 0; c < 3; c++) {
@@ -836,17 +841,12 @@ function unsharpMask(ctx, w, h, amount = 0.6, radius = 1, threshold = 2) {
         dst[i + c] = Math.min(255, Math.max(0, srcData[i + c] + diff * amount));
       }
     }
-    // Alpha channel untouched
   }
   ctx.putImageData(src, 0, 0);
 }
 
-/** Simple horizontal+vertical box blur pass */
 function boxBlurPass(data, w, h, r) {
   const tmp = new Uint8ClampedArray(data.length);
-  const diam = r * 2 + 1;
-
-  // Horizontal pass
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       let rr = 0, gg = 0, bb = 0, count = 0;
@@ -863,8 +863,6 @@ function boxBlurPass(data, w, h, r) {
       tmp[idx+3] = data[idx+3];
     }
   }
-
-  // Vertical pass
   for (let x = 0; x < w; x++) {
     for (let y = 0; y < h; y++) {
       let rr = 0, gg = 0, bb = 0, count = 0;
@@ -882,51 +880,30 @@ function boxBlurPass(data, w, h, r) {
   }
 }
 
-/**
- * Single upscale step: draw source onto a canvas at targetW×targetH,
- * then apply unsharp mask to recover edge detail lost in interpolation.
- * Returns the canvas (not a blob — no re-encoding between steps).
- */
 function upscaleStep(source, targetW, targetH, sharpenAmount = 0.5) {
   const canvas = document.createElement('canvas');
   canvas.width  = targetW;
   canvas.height = targetH;
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
-
-  // Use highest quality interpolation
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(source, 0, 0, targetW, targetH);
-
-  // Sharpen to recover detail lost in the scale step
-  // Stronger sharpening for larger scale jumps
   const scaleRatio = targetW / (source.width || source.naturalWidth || targetW);
   const adaptiveAmount = Math.min(0.9, sharpenAmount * Math.max(1, scaleRatio * 0.6));
   const adaptiveRadius = scaleRatio > 1.8 ? 2 : 1;
-
   unsharpMask(ctx, targetW, targetH, adaptiveAmount, adaptiveRadius, 2);
-
   return canvas;
 }
 
-/**
- * Progressive multi-step upscale: never scale more than ~1.8x per step.
- * This preserves dramatically more detail than a single massive jump.
- * Each intermediate step gets sharpened before feeding into the next.
- *
- * Returns: { canvas, steps } where canvas is the final full-res canvas.
- */
 function progressiveUpscale(source, targetW, targetH, onStep) {
   const srcW = source.width || source.naturalWidth;
   const srcH = source.height || source.naturalHeight;
 
-  // If target is smaller or equal, just do one step (downscale or 1:1)
   if (targetW <= srcW && targetH <= srcH) {
     const canvas = upscaleStep(source, targetW, targetH, 0.3);
     return { canvas, steps: 1 };
   }
 
-  // Calculate how many steps we need (max ~1.8x per step)
   const MAX_STEP_RATIO = 1.8;
   const totalRatio = Math.max(targetW / srcW, targetH / srcH);
   const numSteps   = Math.max(1, Math.ceil(Math.log(totalRatio) / Math.log(MAX_STEP_RATIO)));
@@ -937,20 +914,15 @@ function progressiveUpscale(source, targetW, targetH, onStep) {
   for (let i = 0; i < numSteps; i++) {
     const isLast = (i === numSteps - 1);
     let stepW, stepH;
-
     if (isLast) {
       stepW = targetW;
       stepH = targetH;
     } else {
-      // Calculate intermediate size (geometric progression)
       const progress = (i + 1) / numSteps;
       stepW = Math.round(srcW * Math.pow(targetW / srcW, progress));
       stepH = Math.round(srcH * Math.pow(targetH / srcH, progress));
     }
-
     if (onStep) onStep(i + 1, numSteps, stepW, stepH);
-
-    // Slightly stronger sharpening on intermediate steps, lighter on final
     const sharpness = isLast ? 0.4 : 0.55;
     current = upscaleStep(current, stepW, stepH, sharpness);
     curW = stepW;
@@ -960,11 +932,6 @@ function progressiveUpscale(source, targetW, targetH, onStep) {
   return { canvas: current, steps: numSteps };
 }
 
-/**
- * Export a canvas to a lossless PNG Blob.
- * Canvas.toBlob with 'image/png' is inherently lossless (PNG uses DEFLATE,
- * which is lossless compression — no quality loss, only file-size reduction).
- */
 function canvasToLosslessPNG(canvas) {
   return new Promise((resolve, reject) => {
     canvas.toBlob(blob => {
@@ -974,36 +941,44 @@ function canvasToLosslessPNG(canvas) {
   });
 }
 
-/**
- * Main pipeline: decode → progressive upscale → lossless PNG export.
- * This replaces both scaleToGiclee() and twoPassScale() from the old code.
- */
 async function upscaleToGiclee(base64, mimeType, targetW, targetH) {
-  // Step 1: Decode to raw pixels (no re-encoding)
   setLoadingStatus('Decoding source image…');
   const source = await decodeBase64ToImage(base64, mimeType);
 
   const srcW = source.width || source.naturalWidth;
   const srcH = source.height || source.naturalHeight;
-  console.log(`Source: ${srcW}×${srcH} → Target: ${targetW}×${targetH}`);
 
-  // Step 2: Progressive upscale with per-step sharpening
+  // Store native resolution for display in meta panel
+  lastSourceW = srcW;
+  lastSourceH = srcH;
+
+  console.log(`[Atelier] API source: ${srcW}×${srcH} → Target: ${targetW}×${targetH} (${selectedDPI} DPI)`);
+
   const { canvas, steps } = progressiveUpscale(source, targetW, targetH, (step, total, w, h) => {
     setLoadingStatus(`Upscale pass ${step}/${total} → ${w.toLocaleString()}×${h.toLocaleString()}px…`);
   });
 
-  console.log(`Progressive upscale complete in ${steps} step(s)`);
+  console.log(`[Atelier] Progressive upscale complete in ${steps} step(s)`);
 
-  // Step 3: Export as lossless PNG
   setLoadingStatus('Exporting lossless PNG…');
   const blob = await canvasToLosslessPNG(canvas);
-
-  console.log(`Output: ${targetW}×${targetH}, ${(blob.size / 1048576).toFixed(2)} MB PNG (lossless)`);
+  console.log(`[Atelier] Output: ${targetW}×${targetH}, ${(blob.size / 1048576).toFixed(2)} MB PNG (lossless)`);
   return blob;
 }
 
 
-// ─── API: Gemini multimodal ───────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+// API LAYER — Current working models (April 2026)
+//
+// gemini-2.0-flash-exp / gemini-2.0-flash → shutting down June 1 2026. Removed.
+// Imagen 3/4 → shutting down June 24 2026. Removed entirely.
+//
+// Active image generation models (generateContent + responseModalities):
+//   gemini-3.1-flash-image-preview  — Nano Banana 2, newest, 4K native output
+//   gemini-2.5-flash-image          — Nano Banana, stable workhorse
+//   gemini-2.0-flash-exp-image-generation — legacy experimental, last resort
+// ═══════════════════════════════════════════════════════════════════════════════
+
 async function fetchGeminiImage(prompt, imageBase64, imageMimeType, apiKey) {
   const parts = [];
   if (imageBase64 && imageMimeType) {
@@ -1011,15 +986,16 @@ async function fetchGeminiImage(prompt, imageBase64, imageMimeType, apiKey) {
   }
   parts.push({ text: prompt });
 
-  // Current valid Gemini image-generation models
+  // Priority: newest/highest-res first
   const models = [
-    'gemini-2.0-flash-exp',
-    'gemini-2.0-flash'
+    'gemini-3.1-flash-image-preview',        // Nano Banana 2 — 4K capable
+    'gemini-2.5-flash-image',                // Nano Banana — stable fallback
+    'gemini-2.0-flash-exp-image-generation'  // Legacy experimental — last resort
   ];
 
   for (const model of models) {
     try {
-      setLoadingStatus(`Sending to ${model}…`);
+      setLoadingStatus(`Sending to ${model}...`);
       const res = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
         {
@@ -1031,51 +1007,33 @@ async function fetchGeminiImage(prompt, imageBase64, imageMimeType, apiKey) {
           })
         }
       );
+
       if (res.ok) {
-        const data   = await res.json();
-        const parts2 = data?.candidates?.[0]?.content?.parts || [];
+        const data    = await res.json();
+        const parts2  = data?.candidates?.[0]?.content?.parts || [];
         const imgPart = parts2.find(p => p.inlineData?.mimeType?.startsWith('image/'));
         if (imgPart) {
-          console.log(`${model} success — got ${imgPart.inlineData.mimeType}`);
+          console.log(`[Atelier] ${model} success — format: ${imgPart.inlineData.mimeType}`);
           return { data: imgPart.inlineData.data, mimeType: imgPart.inlineData.mimeType };
         }
+        console.warn(`[Atelier] ${model} returned no image part`, JSON.stringify(data).slice(0, 300));
+        continue;
       }
-      const err = await res.json().catch(() => ({}));
-      console.warn(`${model} failed:`, err?.error?.message);
-    } catch(e) { console.warn(`${model} error:`, e.message); }
+
+      const errBody = await res.json().catch(() => ({}));
+      const errMsg  = errBody?.error?.message || `HTTP ${res.status}`;
+      console.warn(`[Atelier] ${model} failed (${res.status}): ${errMsg}`);
+      if (res.status === 401) throw new Error('Invalid API key — check your key at aistudio.google.com');
+
+    } catch(e) {
+      if (e.message && e.message.startsWith('Invalid API key')) throw e;
+      console.warn(`[Atelier] ${model} error:`, e.message);
+    }
   }
-  throw new Error('All Gemini image models failed — check your API key at aistudio.google.com');
+
+  throw new Error('All image models failed. Verify your key has billing enabled at aistudio.google.com');
 }
 
-// ─── API: Imagen 4 (text-to-image) ───────────────────────────────────────────
-async function fetchImagen4(prompt, aspectRatio, apiKey) {
-  try {
-    setLoadingStatus('Sending to Google Imagen 4…');
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          instances:  [{ prompt }],
-          parameters: { sampleCount: 1, aspectRatio, safetyFilterLevel: 'block_few' }
-        })
-      }
-    );
-    if (res.ok) {
-      const data = await res.json();
-      const b64  = data?.predictions?.[0]?.bytesBase64Encoded;
-      if (b64) {
-        console.log('Imagen 4 success');
-        // Imagen 4 returns PNG
-        return { data: b64, mimeType: 'image/png' };
-      }
-    }
-    const err = await res.json().catch(() => ({}));
-    console.warn('Imagen 4 failed:', err?.error?.message);
-  } catch(e) { console.warn('Imagen 4 error:', e.message); }
-  return null;
-}
 
 // ─── Main dispatcher ──────────────────────────────────────────────────────────
 function handleAction() {
@@ -1086,9 +1044,9 @@ function handleAction() {
 // ─── GENERATE ─────────────────────────────────────────────────────────────────
 async function runGenerate() {
   clearStatus();
-  const apiKey   = document.getElementById('apiKey').value.trim();
-  if (!apiKey)   { setStatus('Please enter your Google AI API key.', 'error'); return; }
-  const desc     = document.getElementById('paintDesc').value.trim();
+  const apiKey = document.getElementById('apiKey').value.trim();
+  if (!apiKey) { setStatus('Please enter your Google AI API key.', 'error'); return; }
+  const desc = document.getElementById('paintDesc').value.trim();
   if (!desc && !refImageBase64) { setStatus('Please describe your painting — or drop a reference image.', 'error'); return; }
   const widthIn  = parseFloat(document.getElementById('widthIn').value);
   const heightIn = parseFloat(document.getElementById('heightIn').value);
@@ -1112,21 +1070,17 @@ async function runGenerate() {
     );
     lastPrompt = fullPrompt;
 
-    let result; // { data: base64, mimeType: string }
+    let result;
 
     if (refImageBase64) {
       const paintPrompt = `Using this image as your composition and subject reference, create: ${fullPrompt}. Interpret it faithfully in the specified painting style — do not simply reproduce the photograph, paint it as a fine art work.`;
       result = await fetchGeminiImage(paintPrompt, refImageBase64, refImageType, apiKey);
     } else {
-      const ratio = widthIn / heightIn;
-      const ar = ratio > 1.6 ? '16:9' : ratio > 1.2 ? '4:3' : ratio > 0.85 ? '1:1' : ratio > 0.65 ? '3:4' : '9:16';
-      result = await fetchImagen4(fullPrompt, ar, apiKey);
-      if (!result) result = await fetchGeminiImage(fullPrompt, null, null, apiKey);
+      result = await fetchGeminiImage(fullPrompt, null, null, apiKey);
     }
 
     clearInterval(timer);
 
-    // Use the new progressive pipeline
     setLoadingStatus(`Scaling to ${targetW.toLocaleString()}×${targetH.toLocaleString()}px @ ${selectedDPI} DPI…`);
     const finalBlob = await upscaleToGiclee(result.data, result.mimeType, targetW, targetH);
     await showResult(finalBlob, widthIn, heightIn, targetW, targetH, 'Generated');
@@ -1188,17 +1142,25 @@ function showResult(blob, widthIn, heightIn, targetW, targetH, label) {
     if (lastImageData) URL.revokeObjectURL(lastImageData);
     lastImageData = URL.createObjectURL(blob);
     const fileSizeMB = (blob.size / (1024*1024)).toFixed(2);
+
+    // Build source resolution string for meta panel
+    const sourceRes = lastSourceW && lastSourceH
+      ? `${lastSourceW.toLocaleString()} × ${lastSourceH.toLocaleString()}`
+      : '—';
+
     const img = document.getElementById('resultImg');
     img.onload = () => {
       hideLoading();
       document.getElementById('outputMeta').innerHTML = `
         <div class="meta-item"><span class="meta-label">Mode</span><span class="meta-value">${label}</span></div>
         <div class="meta-divider"></div>
+        <div class="meta-item"><span class="meta-label">API Source</span><span class="meta-value" style="font-size:11px">${sourceRes} px</span></div>
+        <div class="meta-divider"></div>
         <div class="meta-item"><span class="meta-label">Dimensions</span><span class="meta-value">${widthIn}" × ${heightIn}"</span></div>
         <div class="meta-divider"></div>
         <div class="meta-item"><span class="meta-label">Resolution</span><span class="meta-value">${selectedDPI} DPI</span></div>
         <div class="meta-divider"></div>
-        <div class="meta-item"><span class="meta-label">Pixels</span><span class="meta-value">${targetW.toLocaleString()} × ${targetH.toLocaleString()}</span></div>
+        <div class="meta-item"><span class="meta-label">Output Pixels</span><span class="meta-value">${targetW.toLocaleString()} × ${targetH.toLocaleString()}</span></div>
         <div class="meta-divider"></div>
         <div class="meta-item"><span class="meta-label">File Size</span><span class="meta-value">${fileSizeMB} MB</span></div>
         <div class="meta-divider"></div>
@@ -1229,7 +1191,7 @@ function hideLoading() {
   }
 }
 
-// ─── Download print (lossless PNG — no re-encoding) ──────────────────────────
+// ─── Download print (lossless PNG — direct object URL, no re-encoding) ───────
 function downloadPrint() {
   if (!lastImageData) return;
   const w = document.getElementById('widthIn').value;
@@ -1288,6 +1250,8 @@ function resetCanvas() {
   document.getElementById('emptyState').style.display    = 'block';
   clearStatus();
   if (lastImageData) { URL.revokeObjectURL(lastImageData); lastImageData = null; }
+  lastSourceW = 0;
+  lastSourceH = 0;
 }
 
 // Init
