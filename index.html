@@ -770,9 +770,10 @@ async function compositeSignature(canvas, dpi) {
   if (variant === 'auto') {
     variant = detectBackgroundVariant(canvas, x, y, sigWidthPx, sigHeightPx);
   }
-  console.log(`[Atelier Sig] Using variant: ${variant} at position: ${signaturePosition}`);
+  console.log(`[Atelier Sig] Using variant: ${variant} at position: ${signaturePosition}, coords: ${x},${y} size: ${sigWidthPx}x${sigHeightPx}, canvas: ${canvas.width}x${canvas.height}`);
 
   const sigImg = await loadSignatureImage(variant);
+  console.log(`[Atelier Sig] Image loaded: ${sigImg.width}x${sigImg.height}, naturalWidth: ${sigImg.naturalWidth}`);
 
   const ctx = canvas.getContext('2d');
   ctx.save();
@@ -781,6 +782,11 @@ async function compositeSignature(canvas, dpi) {
   ctx.drawImage(sigImg, x, y, sigWidthPx, sigHeightPx);
   ctx.restore();
 
+  // Force pixel flush — read one pixel back to force the GPU to complete the draw
+  // This ensures the signature is actually in the canvas buffer before export
+  ctx.getImageData(x, y, 1, 1);
+
+  console.log(`[Atelier Sig] Signature composited and flushed to canvas buffer`);
   return canvas;
 }
 
