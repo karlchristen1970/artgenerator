@@ -778,7 +778,7 @@ async function compositeSignature(canvas, dpi) {
   const ctx = canvas.getContext('2d');
   ctx.save();
   ctx.globalAlpha = signatureOpacity;
-  ctx.globalCompositeOperation = 'multiply';
+  ctx.globalCompositeOperation = 'source-over';
   ctx.drawImage(sigImg, x, y, sigWidthPx, sigHeightPx);
   ctx.restore();
 
