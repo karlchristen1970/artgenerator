@@ -161,6 +161,29 @@
 
   .api-note { font-size: 10px; color: var(--muted); line-height: 1.6; margin-top: 8px; }
 
+  /* Key validation indicator */
+  .key-validity-indicator {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-top: 8px;
+    padding: 6px 10px;
+    border-radius: 3px;
+    display: none;
+  }
+  .key-validity-indicator.valid {
+    display: block;
+    background: rgba(106,158,106,0.08);
+    border: 1px solid rgba(106,158,106,0.3);
+    color: #8ebe8e;
+  }
+  .key-validity-indicator.invalid {
+    display: block;
+    background: rgba(192,96,96,0.08);
+    border: 1px solid rgba(192,96,96,0.3);
+    color: #e08080;
+  }
+
   /* WAVE 1.5: Provider toggle */
   .provider-toggle {
     display: grid;
@@ -239,7 +262,6 @@
   .size-x { text-align: center; color: var(--gold-dim); font-size: 14px; padding-top: 12px; }
   .size-hint { font-size: 10px; color: var(--muted); margin-top: 6px; text-align: center; }
 
-  /* Print size presets */
   .preset-sizes-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -262,7 +284,6 @@
   .size-preset-btn:hover { border-color: var(--gold-dim); color: var(--parchment); background: rgba(154,176,204,0.04); }
   .size-preset-btn.active { border-color: var(--gold); background: rgba(154,176,204,0.1); color: var(--gold); }
 
-  /* Aspect ratio lock */
   .aspect-lock-row {
     display: flex;
     align-items: center;
@@ -506,7 +527,6 @@
   .status-bar.success { display: block; background: rgba(106,158,106,0.1); border: 1px solid rgba(106,158,106,0.3); color: #8ebe8e; }
   .status-bar.info    { display: block; background: rgba(154,176,204,0.08); border: 1px solid var(--border); color: var(--muted); }
 
-  /* WAVE 1.5: Try-other-provider button on errors */
   .switch-provider-btn {
     display: inline-block;
     margin-left: 10px;
@@ -532,7 +552,6 @@
   .tooltip { font-size: 9px; color: var(--muted); line-height: 1.5; margin-top: 4px; }
   .char-count { font-size: 9px; color: var(--muted); text-align: right; margin-top: 4px; }
 
-  /* Signature control section */
   .sig-section { border: 1px solid var(--border); border-radius: 4px; padding: 16px; background: rgba(154,176,204,0.03); }
   .sig-toggle-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
   .sig-toggle-row label { margin-bottom: 0; cursor: pointer; letter-spacing: 0.15em; }
@@ -551,7 +570,6 @@
   .sig-opacity-row input[type="range"] { flex: 1; accent-color: var(--gold); }
   .sig-opacity-value { font-size: 11px; color: var(--gold); font-family: 'Cormorant Garamond', serif; min-width: 32px; text-align: right; }
 
-  /* Persistent settings indicator */
   .settings-status-row {
     display: flex;
     align-items: center;
@@ -588,7 +606,7 @@
 <header>
   <span class="logo">Atelier</span>
   <span class="logo-sub">Giclée Print Studio</span>
-  <span class="version-tag">v1.5 · Dual Provider</span>
+  <span class="version-tag">v1.5.1 · Dual Provider</span>
   <span class="header-badge">340 DPI · Museum Quality</span>
 </header>
 
@@ -610,7 +628,6 @@
     <div class="api-section">
       <div class="section-label">AI Provider &amp; API Key</div>
 
-      <!-- WAVE 1.5: Provider toggle -->
       <div class="provider-toggle">
         <button class="provider-btn active" id="providerGemini" onclick="setProvider('gemini')" type="button">
           <span class="provider-name">Google Gemini</span>
@@ -623,15 +640,15 @@
       </div>
 
       <label for="apiKey" id="apiKeyLabel">Gemini API Key</label>
-      <input type="password" id="apiKey" placeholder="AIza..." autocomplete="off">
+      <input type="password" id="apiKey" placeholder="AIza..." autocomplete="off" oninput="onApiKeyInput()">
       <div class="api-note" id="apiKeyNoteWrap">
         <span id="apiKeyDescription">Paid-tier key from <strong>aistudio.google.com</strong> → Get API key. Never leaves your browser.</span>
         <span id="apiKeyNote" style="display:none;color:var(--gold-dim)"><br>Not needed for Faithful upscale.</span>
       </div>
+      <div id="keyValidityIndicator" class="key-validity-indicator"></div>
       <div class="provider-cost-note" id="providerCostNote">~Cost: free tier available · Tier 1 paid ~$0.04/image</div>
     </div>
 
-    <!-- Settings persistence indicator -->
     <div class="settings-status-row">
       <span id="settingsStatusText">○ Settings will save</span>
       <button class="reset-link" onclick="resetAllSettings()" title="Clear all saved preferences">↺ Reset</button>
@@ -857,10 +874,10 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // ATELIER VERSION
 // ═══════════════════════════════════════════════════════════════════════════════
-const ATELIER_VERSION = '1.5.0-dual-provider';
+const ATELIER_VERSION = '1.5.1-key-validation';
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SIGNATURE ASSETS — paste your real base64 signature data here
+// SIGNATURE ASSETS
 // ═══════════════════════════════════════════════════════════════════════════════
 const SIGNATURE_ASSETS = {
   sepia: '__SIG_SEPIA__',
@@ -869,8 +886,7 @@ const SIGNATURE_ASSETS = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// WAVE 1.5 — PROVIDER ABSTRACTION
-// Two providers, manually toggled. Gemini default. OpenAI as resilience + fidelity option.
+// PROVIDER CONFIG + KEY VALIDATION
 // ═══════════════════════════════════════════════════════════════════════════════
 
 let currentProvider = 'gemini'; // 'gemini' | 'openai'
@@ -882,7 +898,12 @@ const PROVIDER_CONFIG = {
     keyPlaceholder: 'AIza...',
     keyDescription: 'Paid-tier key from <strong>aistudio.google.com</strong> → Get API key. Never leaves your browser.',
     costNote: '~Cost: free tier available · Tier 1 paid ~$0.04/image',
-    pingMessage: 'Sending to Gemini Nano Banana Pro...'
+    pingMessage: 'Sending to Gemini Nano Banana Pro...',
+    // Validation: Google API keys start with "AIza" and are 39 chars total
+    keyPrefix: 'AIza',
+    keyMinLength: 35,
+    keyMaxLength: 50,
+    wrongKeyHint: 'This looks like an OpenAI key (starts with sk-). Switch to OpenAI provider, or paste a Gemini key (starts with AIza).'
   },
   openai: {
     label: 'OpenAI',
@@ -890,17 +911,87 @@ const PROVIDER_CONFIG = {
     keyPlaceholder: 'sk-...',
     keyDescription: 'Verified org required. Key from <strong>platform.openai.com</strong> → API keys. Never leaves your browser.',
     costNote: '~Cost: $0.21/image (1024² high quality) · ref images add input tokens',
-    pingMessage: 'Sending to OpenAI gpt-image-2 (high quality)...'
+    pingMessage: 'Sending to OpenAI gpt-image-2 (high quality)...',
+    // Validation: OpenAI keys start with "sk-" (sk-, sk-proj-, sk-svcacct-)
+    keyPrefix: 'sk-',
+    keyMinLength: 40,
+    keyMaxLength: 250,
+    wrongKeyHint: 'This looks like a Gemini key (starts with AIza). Switch to Gemini provider, or paste an OpenAI key (starts with sk-).'
   }
 };
 
-// Cache both keys in session memory so user can flip providers without re-pasting
+// Cache keys per-provider in session memory only (NEVER persisted)
 const keyCache = { gemini: '', openai: '' };
 
+/**
+ * Validates that a key matches the format expected by the given provider.
+ * Returns { valid: bool, reason: string|null, suggestedProvider: string|null }
+ */
+function validateKey(key, provider) {
+  const cfg = PROVIDER_CONFIG[provider];
+  if (!key) return { valid: false, reason: 'empty', suggestedProvider: null };
+
+  const trimmed = key.trim();
+
+  // Detect cross-provider key contamination — the bug from the console log
+  if (provider === 'gemini' && trimmed.startsWith('sk-')) {
+    return { valid: false, reason: 'wrong-provider', suggestedProvider: 'openai' };
+  }
+  if (provider === 'openai' && trimmed.startsWith('AIza')) {
+    return { valid: false, reason: 'wrong-provider', suggestedProvider: 'gemini' };
+  }
+
+  // Format check
+  if (!trimmed.startsWith(cfg.keyPrefix)) {
+    return { valid: false, reason: 'bad-prefix', suggestedProvider: null };
+  }
+  if (trimmed.length < cfg.keyMinLength || trimmed.length > cfg.keyMaxLength) {
+    return { valid: false, reason: 'bad-length', suggestedProvider: null };
+  }
+
+  return { valid: true, reason: null, suggestedProvider: null };
+}
+
+function onApiKeyInput() {
+  const keyInput = document.getElementById('apiKey');
+  const indicator = document.getElementById('keyValidityIndicator');
+  const key = keyInput.value.trim();
+
+  if (!key) {
+    indicator.className = 'key-validity-indicator';
+    indicator.textContent = '';
+    return;
+  }
+
+  const result = validateKey(key, currentProvider);
+
+  if (result.valid) {
+    indicator.className = 'key-validity-indicator valid';
+    indicator.textContent = `✓ Key format valid for ${PROVIDER_CONFIG[currentProvider].label}`;
+  } else if (result.reason === 'wrong-provider') {
+    indicator.className = 'key-validity-indicator invalid';
+    indicator.innerHTML = `⚠ ${PROVIDER_CONFIG[currentProvider].wrongKeyHint}`;
+  } else if (result.reason === 'bad-prefix') {
+    indicator.className = 'key-validity-indicator invalid';
+    indicator.textContent = `⚠ ${PROVIDER_CONFIG[currentProvider].label} keys start with "${PROVIDER_CONFIG[currentProvider].keyPrefix}"`;
+  } else if (result.reason === 'bad-length') {
+    indicator.className = 'key-validity-indicator invalid';
+    indicator.textContent = `⚠ Key length looks wrong for ${PROVIDER_CONFIG[currentProvider].label} — check for missing/extra characters`;
+  }
+
+  // Cache valid keys for fast provider-switching
+  if (result.valid) {
+    keyCache[currentProvider] = key;
+  }
+}
+
 function setProvider(provider) {
-  // Save current key to cache before switching
+  // Save current key to per-provider cache before switching
   const currentKey = document.getElementById('apiKey').value.trim();
-  if (currentKey) keyCache[currentProvider] = currentKey;
+  if (currentKey) {
+    const validation = validateKey(currentKey, currentProvider);
+    if (validation.valid) keyCache[currentProvider] = currentKey;
+  }
 
   currentProvider = provider;
   const cfg = PROVIDER_CONFIG[provider];
@@ -910,15 +1001,19 @@ function setProvider(provider) {
 
   document.getElementById('apiKeyLabel').textContent = cfg.keyLabel;
   document.getElementById('apiKey').placeholder = cfg.keyPlaceholder;
+  // Restore cached key for this provider (or blank if none)
   document.getElementById('apiKey').value = keyCache[provider] || '';
   document.getElementById('apiKeyDescription').innerHTML = cfg.keyDescription;
   document.getElementById('providerCostNote').textContent = cfg.costNote;
+
+  // Re-run validation for the now-active key
+  onApiKeyInput();
 
   saveSettings();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// PERSISTENT SETTINGS
+// PERSISTENT SETTINGS (KEYS ARE NEVER PERSISTED)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const SETTINGS_KEY = 'atelier-settings-v1';
@@ -953,6 +1048,7 @@ function saveSettings() {
         colorMode: signatureColorMode
       },
       lastSaved: new Date().toISOString()
+      // Note: API keys are intentionally NEVER stored
     };
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
     updateSettingsStatusText();
@@ -1672,17 +1768,42 @@ async function upscaleToGiclee(base64, mimeType, targetW, targetH) {
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // API LAYER — Provider-agnostic dispatcher
+// CRITICAL: Each provider function is responsible for verifying it received
+// a key matching its own format. This is the last line of defense against the
+// wrong-key-to-wrong-endpoint bug from v1.5.0.
 // ═══════════════════════════════════════════════════════════════════════════════
 
 async function fetchImage(prompt, imageBase64, imageMimeType, apiKey) {
+  // Hard guard: route based on currentProvider, validate key matches, never cross.
+  const validation = validateKey(apiKey, currentProvider);
+  if (!validation.valid) {
+    if (validation.reason === 'wrong-provider') {
+      throw new Error(PROVIDER_CONFIG[currentProvider].wrongKeyHint);
+    }
+    if (validation.reason === 'bad-prefix') {
+      throw new Error(`${PROVIDER_CONFIG[currentProvider].label} keys must start with "${PROVIDER_CONFIG[currentProvider].keyPrefix}". Check your key.`);
+    }
+    if (validation.reason === 'bad-length') {
+      throw new Error(`Key length looks wrong for ${PROVIDER_CONFIG[currentProvider].label}. Check for missing or extra characters.`);
+    }
+    throw new Error(`Invalid ${PROVIDER_CONFIG[currentProvider].label} API key.`);
+  }
+
   if (currentProvider === 'openai') {
     return await fetchOpenAIImage(prompt, imageBase64, imageMimeType, apiKey);
   } else {
     return await fetchGeminiImage(prompt, imageBase64, imageMimeType, apiKey);
   }
 }
+
 // ─── Gemini ───────────────────────────────────────────────────────────────────
 async function fetchGeminiImage(prompt, imageBase64, imageMimeType, apiKey) {
+  // Defensive: re-verify the key shape before constructing the URL.
+  // This prevents accidentally pasting an OpenAI key into the Google URL.
+  if (!apiKey || !apiKey.startsWith('AIza')) {
+    throw new Error('Gemini key required (must start with AIza). Refusing to send wrong-format key to Google.');
+  }
+
   const parts = [];
   if (imageBase64 && imageMimeType) {
     parts.push({ inlineData: { mimeType: imageMimeType, data: imageBase64 } });
@@ -1694,11 +1815,15 @@ async function fetchGeminiImage(prompt, imageBase64, imageMimeType, apiKey) {
     'gemini-3.1-flash-image-preview'
   ];
 
+  // Encode the key for URL safety
+  const encodedKey = encodeURIComponent(apiKey);
+  const lastErrors = [];
+
   for (const model of models) {
     try {
       setLoadingStatus(`Sending to ${model}...`);
       const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodedKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1719,41 +1844,59 @@ async function fetchGeminiImage(prompt, imageBase64, imageMimeType, apiKey) {
           lastProviderUsed = 'gemini';
           return { data: imgPart.inlineData.data, mimeType: imgPart.inlineData.mimeType, model };
         }
+        // 200 but no image — possibly safety filtered. Capture and try next model.
+        const blockReason = data?.candidates?.[0]?.finishReason || 'no image returned';
+        lastErrors.push(`${model}: ${blockReason}`);
+        console.warn(`[Atelier] ${model} returned no image:`, blockReason);
         continue;
       }
 
       const errBody = await res.json().catch(() => ({}));
       const errMsg  = errBody?.error?.message || `HTTP ${res.status}`;
       console.warn(`[Atelier] ${model} failed (${res.status}): ${errMsg}`);
-      if (res.status === 401) throw new Error('Invalid Gemini API key — check your key at aistudio.google.com');
+      lastErrors.push(`${model}: ${errMsg}`);
+
+      // Surface auth errors immediately — no point trying the second model
+      if (res.status === 401 || res.status === 403) {
+        throw new Error('Invalid Gemini API key — check your key at aistudio.google.com');
+      }
+      if (res.status === 400 && /API key not valid/i.test(errMsg)) {
+        throw new Error('Gemini rejected this API key. Verify the key at aistudio.google.com → Get API key.');
+      }
 
     } catch(e) {
-      if (e.message && e.message.startsWith('Invalid Gemini API key')) throw e;
+      // Re-throw clear auth errors
+      if (e.message && (e.message.startsWith('Invalid Gemini') || e.message.startsWith('Gemini rejected'))) {
+        throw e;
+      }
       console.warn(`[Atelier] ${model} error:`, e.message);
+      lastErrors.push(`${model}: ${e.message}`);
     }
   }
 
-  throw new Error('All Gemini models failed (likely 503 timeout). Try OpenAI provider instead.');
+  // All models failed — surface the actual reasons, not a generic "503 timeout"
+  const detail = lastErrors.length ? ` Details: ${lastErrors.join(' | ')}` : '';
+  throw new Error(`All Gemini models failed.${detail} Try OpenAI provider instead.`);
 }
 
 // ─── OpenAI gpt-image-2 ───────────────────────────────────────────────────────
 async function fetchOpenAIImage(prompt, imageBase64, imageMimeType, apiKey) {
-  // Two endpoints: text-only uses /generations, with-reference uses /edits
-  // Both return base64 data when response_format=b64_json
+  // Defensive: re-verify the key shape. This is critical because we send the
+  // key as a Bearer token — a malformed key here is sent to OpenAI's logs.
+  if (!apiKey || !apiKey.startsWith('sk-')) {
+    throw new Error('OpenAI key required (must start with sk-). Refusing to send wrong-format key.');
+  }
+
   const model = 'gpt-image-2';
 
   if (imageBase64 && imageMimeType) {
-    // Edits endpoint with reference image — uses multipart/form-data
     setLoadingStatus(`Sending to ${model} (edit with reference)...`);
     const formData = new FormData();
     formData.append('model', model);
     formData.append('prompt', prompt);
     formData.append('size', '1024x1024');
-    // NOTE: gpt-image-2 always processes reference images at high fidelity automatically
-    // The 'quality' parameter is not accepted on /edits for this model and will return 400.
     formData.append('n', '1');
 
-    // Convert base64 to a Blob for upload
     const binary = atob(imageBase64);
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
@@ -1785,7 +1928,6 @@ async function fetchOpenAIImage(prompt, imageBase64, imageMimeType, apiKey) {
     return { data: b64, mimeType: 'image/png', model };
 
   } else {
-    // Generations endpoint — text-only
     setLoadingStatus(`Sending to ${model} (text-to-image)...`);
     const res = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
@@ -1833,6 +1975,18 @@ async function runGenerate() {
   clearStatus();
   const apiKey = document.getElementById('apiKey').value.trim();
   if (!apiKey) { setStatus(`Please enter your ${PROVIDER_CONFIG[currentProvider].keyLabel}.`, 'error'); return; }
+
+  // Pre-flight key validation
+  const validation = validateKey(apiKey, currentProvider);
+  if (!validation.valid) {
+    if (validation.reason === 'wrong-provider') {
+      setStatus(PROVIDER_CONFIG[currentProvider].wrongKeyHint, 'error');
+    } else {
+      setStatus(`Invalid ${PROVIDER_CONFIG[currentProvider].keyLabel} format. Check the indicator above.`, 'error');
+    }
+    return;
+  }
+
   const desc = document.getElementById('paintDesc').value.trim();
   if (!desc && !refImageBase64) { setStatus('Please describe your painting — or drop a reference image.', 'error'); return; }
   const widthIn  = parseFloat(document.getElementById('widthIn').value);
@@ -1890,7 +2044,6 @@ async function runGenerate() {
   } catch(err) {
     clearInterval(timer);
     hideLoading();
-    // Show "Try other provider" button on error
     setStatus(`Error: ${err.message}`, 'error', true);
     console.error(err);
   }
@@ -1931,6 +2084,17 @@ async function runUpscale() {
   } else {
     const apiKey = document.getElementById('apiKey').value.trim();
     if (!apiKey) { setStatus(`AI Enhanced upscale requires a ${PROVIDER_CONFIG[currentProvider].keyLabel}.`, 'error'); return; }
+
+    // Pre-flight key validation
+    const validation = validateKey(apiKey, currentProvider);
+    if (!validation.valid) {
+      if (validation.reason === 'wrong-provider') {
+        setStatus(PROVIDER_CONFIG[currentProvider].wrongKeyHint, 'error');
+      } else {
+        setStatus(`Invalid ${PROVIDER_CONFIG[currentProvider].keyLabel} format.`, 'error');
+      }
+      return;
+    }
 
     showLoading('Enhancing your painting with AI…');
     const steps = ['Analyzing brushwork…','Reconstructing fine detail…','Sharpening edges…','Improving tonal range…','Preserving artistic character…'];
@@ -2088,7 +2252,7 @@ function resetCanvas() {
 // INIT
 // ═══════════════════════════════════════════════════════════════════════════════
 setMode('generate');
-setProvider('gemini'); // default
+setProvider('gemini');
 updateDpiSmartHint();
 updateHint();
 
