@@ -1184,10 +1184,9 @@ async function fetchGeminiImage(prompt, imageBase64, imageMimeType, apiKey) {
   }
   parts.push({ text: prompt });
 
-  const models = [
-    'gemini-3.1-flash-image-preview',
-    'gemini-3-pro-image-preview',
-    'gemini-2.5-flash-image'
+    const models = [
+    'gemini-3-pro-image-preview',      // Nano Banana Pro — flagship, best for fine art reference work
+    'gemini-3.1-flash-image-preview'   // Nano Banana 2 — fast fallback if Pro is unavailable
   ];
 
   for (const model of models) {
