@@ -1750,7 +1750,8 @@ async function fetchOpenAIImage(prompt, imageBase64, imageMimeType, apiKey) {
     formData.append('model', model);
     formData.append('prompt', prompt);
     formData.append('size', '1024x1024');
-    formData.append('quality', 'high');
+    // NOTE: gpt-image-2 always processes reference images at high fidelity automatically
+    // The 'quality' parameter is not accepted on /edits for this model and will return 400.
     formData.append('n', '1');
 
     // Convert base64 to a Blob for upload
