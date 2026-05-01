@@ -1675,6 +1675,23 @@ async function upscaleToGiclee(base64, mimeType, targetW, targetH) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 async function fetchImage(prompt, imageBase64, imageMimeType, apiKey) {
+  // ─── KNOWN ISSUE WORKAROUND (April 2026) ──────────────────────────────────
+  // OpenAI's /v1/images/edits endpoint is currently broken — it rejects all
+  // GPT Image models and only accepts dall-e-2 (which doesn't exist). Tracked
+  // in openai/openai-node#1844. Until OpenAI fixes this server-side, we
+  // auto-route reference-image calls to Gemini regardless of provider toggle.
+  // Text-only OpenAI generation works fine and is unaffected.
+  // Remove this block once OpenAI fixes the edits endpoint.
+  // ──────────────────────────────────────────────────────────────────────────
+  if (currentProvider === 'openai' && imageBase64 && imageMimeType) {
+    setLoadingStatus('OpenAI edits endpoint is broken — auto-routing to Gemini for this reference-image call…');
+    console.warn('[Atelier] Auto-fallback: OpenAI selected but ref image used. Using Gemini due to OpenAI /edits bug.');
+    const result = await fetchGeminiImage(prompt, imageBase64, imageMimeType, apiKey);
+    // Tag the result so the metadata + UI knows what actually happened
+    result.fallbackUsed = 'openai-to-gemini-edits-bug';
+    return result;
+  }
+
   if (currentProvider === 'openai') {
     return await fetchOpenAIImage(prompt, imageBase64, imageMimeType, apiKey);
   } else {
