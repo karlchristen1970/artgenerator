@@ -161,6 +161,48 @@
 
   .api-note { font-size: 10px; color: var(--muted); line-height: 1.6; margin-top: 8px; }
 
+  /* WAVE 1.5: Provider toggle */
+  .provider-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .provider-btn {
+    background: transparent;
+    border: none;
+    padding: 10px 8px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 9px;
+    font-weight: 400;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    line-height: 1.3;
+  }
+  .provider-btn:first-child { border-right: 1px solid var(--border); }
+  .provider-btn:hover { color: var(--parchment); background: rgba(154,176,204,0.05); }
+  .provider-btn.active { background: rgba(154,176,204,0.1); color: var(--gold); }
+  .provider-btn .provider-name { display: block; font-weight: 500; margin-bottom: 2px; }
+  .provider-btn .provider-sub { display: block; font-size: 8px; opacity: 0.65; letter-spacing: 0.15em; }
+
+  .provider-cost-note {
+    font-size: 9px;
+    color: var(--gold-dim);
+    letter-spacing: 0.15em;
+    margin-top: 8px;
+    padding: 6px 10px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 3px;
+    background: rgba(154,176,204,0.03);
+    text-align: center;
+  }
+
   label {
     display: block;
     font-size: 10px;
@@ -197,7 +239,7 @@
   .size-x { text-align: center; color: var(--gold-dim); font-size: 14px; padding-top: 12px; }
   .size-hint { font-size: 10px; color: var(--muted); margin-top: 6px; text-align: center; }
 
-  /* WAVE 1: Print size presets */
+  /* Print size presets */
   .preset-sizes-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -220,7 +262,7 @@
   .size-preset-btn:hover { border-color: var(--gold-dim); color: var(--parchment); background: rgba(154,176,204,0.04); }
   .size-preset-btn.active { border-color: var(--gold); background: rgba(154,176,204,0.1); color: var(--gold); }
 
-  /* WAVE 1: Aspect ratio lock */
+  /* Aspect ratio lock */
   .aspect-lock-row {
     display: flex;
     align-items: center;
@@ -464,6 +506,24 @@
   .status-bar.success { display: block; background: rgba(106,158,106,0.1); border: 1px solid rgba(106,158,106,0.3); color: #8ebe8e; }
   .status-bar.info    { display: block; background: rgba(154,176,204,0.08); border: 1px solid var(--border); color: var(--muted); }
 
+  /* WAVE 1.5: Try-other-provider button on errors */
+  .switch-provider-btn {
+    display: inline-block;
+    margin-left: 10px;
+    background: rgba(154,176,204,0.15);
+    border: 1px solid var(--gold-dim);
+    color: var(--gold-light);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .switch-provider-btn:hover { background: rgba(154,176,204,0.3); color: var(--gold); }
+
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: rgba(154,176,204,0.2); border-radius: 2px; }
@@ -491,7 +551,7 @@
   .sig-opacity-row input[type="range"] { flex: 1; accent-color: var(--gold); }
   .sig-opacity-value { font-size: 11px; color: var(--gold); font-family: 'Cormorant Garamond', serif; min-width: 32px; text-align: right; }
 
-  /* WAVE 1: Persistent settings indicator */
+  /* Persistent settings indicator */
   .settings-status-row {
     display: flex;
     align-items: center;
@@ -528,7 +588,7 @@
 <header>
   <span class="logo">Atelier</span>
   <span class="logo-sub">Giclée Print Studio</span>
-  <span class="version-tag">v1.1 · Wave 1</span>
+  <span class="version-tag">v1.5 · Dual Provider</span>
   <span class="header-badge">340 DPI · Museum Quality</span>
 </header>
 
@@ -548,16 +608,30 @@
     </div>
 
     <div class="api-section">
-      <div class="section-label">Google AI API Key</div>
-      <label for="apiKey">Gemini API Key</label>
+      <div class="section-label">AI Provider &amp; API Key</div>
+
+      <!-- WAVE 1.5: Provider toggle -->
+      <div class="provider-toggle">
+        <button class="provider-btn active" id="providerGemini" onclick="setProvider('gemini')" type="button">
+          <span class="provider-name">Google Gemini</span>
+          <span class="provider-sub">Nano Banana Pro</span>
+        </button>
+        <button class="provider-btn" id="providerOpenai" onclick="setProvider('openai')" type="button">
+          <span class="provider-name">OpenAI</span>
+          <span class="provider-sub">gpt-image-2 · HQ</span>
+        </button>
+      </div>
+
+      <label for="apiKey" id="apiKeyLabel">Gemini API Key</label>
       <input type="password" id="apiKey" placeholder="AIza..." autocomplete="off">
-      <div class="api-note">
-        Paid-tier key from <strong>aistudio.google.com</strong> → Get API key. Never leaves your browser. Never saved to disk.
+      <div class="api-note" id="apiKeyNoteWrap">
+        <span id="apiKeyDescription">Paid-tier key from <strong>aistudio.google.com</strong> → Get API key. Never leaves your browser.</span>
         <span id="apiKeyNote" style="display:none;color:var(--gold-dim)"><br>Not needed for Faithful upscale.</span>
       </div>
+      <div class="provider-cost-note" id="providerCostNote">~Cost: free tier available · Tier 1 paid ~$0.04/image</div>
     </div>
 
-    <!-- WAVE 1: Settings persistence indicator -->
+    <!-- Settings persistence indicator -->
     <div class="settings-status-row">
       <span id="settingsStatusText">○ Settings will save</span>
       <button class="reset-link" onclick="resetAllSettings()" title="Clear all saved preferences">↺ Reset</button>
@@ -643,7 +717,7 @@
         </button>
         <button class="method-btn" data-method="enhanced" onclick="setMethod('enhanced')">
           <span class="method-name">AI Enhanced</span>
-          <span class="method-desc">Gemini recovers brushwork detail before upscaling. Requires API key.</span>
+          <span class="method-desc">AI recovers brushwork detail before upscaling. Requires API key.</span>
         </button>
       </div>
       <div class="method-note" id="methodNote">
@@ -654,7 +728,6 @@
     <div>
       <div class="section-label">Print Dimensions</div>
 
-      <!-- WAVE 1: Print size presets -->
       <label style="margin-bottom:10px">Common Print Sizes</label>
       <div class="preset-sizes-row">
         <button class="size-preset-btn" data-w="5"  data-h="7"  type="button">5 × 7</button>
@@ -667,7 +740,6 @@
         <button class="size-preset-btn" data-w="20" data-h="20" type="button">20 × 20</button>
       </div>
 
-      <!-- WAVE 1: Aspect ratio lock -->
       <div class="aspect-lock-row">
         <button class="aspect-lock-btn" id="aspectLockBtn" onclick="toggleAspectLock()" type="button">
           <span class="aspect-lock-icon" id="aspectLockIcon">○</span>
@@ -783,18 +855,13 @@
 
 <script>
 // ═══════════════════════════════════════════════════════════════════════════════
-// ATELIER VERSION — embedded in metadata for provenance
+// ATELIER VERSION
 // ═══════════════════════════════════════════════════════════════════════════════
-const ATELIER_VERSION = '1.1.0-wave1';
+const ATELIER_VERSION = '1.5.0-dual-provider';
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SIGNATURE ASSETS — Base64 encoded PNG data URLs
-// Three color variants for automatic background-matching
+// SIGNATURE ASSETS — paste your real base64 signature data here
 // ═══════════════════════════════════════════════════════════════════════════════
-// NOTE: Replace these placeholder data URLs with your real signature assets
-// from the previous version. They are intentionally kept identical.
-// ═══════════════════════════════════════════════════════════════════════════════
-
 const SIGNATURE_ASSETS = {
   sepia: '__SIG_SEPIA__',
   gold:  '__SIG_GOLD__',
@@ -802,8 +869,56 @@ const SIGNATURE_ASSETS = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// WAVE 1 — PERSISTENT SETTINGS via localStorage
-// API key is NEVER persisted (security). Everything else is.
+// WAVE 1.5 — PROVIDER ABSTRACTION
+// Two providers, manually toggled. Gemini default. OpenAI as resilience + fidelity option.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+let currentProvider = 'gemini'; // 'gemini' | 'openai'
+
+const PROVIDER_CONFIG = {
+  gemini: {
+    label: 'Google Gemini',
+    keyLabel: 'Gemini API Key',
+    keyPlaceholder: 'AIza...',
+    keyDescription: 'Paid-tier key from <strong>aistudio.google.com</strong> → Get API key. Never leaves your browser.',
+    costNote: '~Cost: free tier available · Tier 1 paid ~$0.04/image',
+    pingMessage: 'Sending to Gemini Nano Banana Pro...'
+  },
+  openai: {
+    label: 'OpenAI',
+    keyLabel: 'OpenAI API Key',
+    keyPlaceholder: 'sk-...',
+    keyDescription: 'Verified org required. Key from <strong>platform.openai.com</strong> → API keys. Never leaves your browser.',
+    costNote: '~Cost: $0.21/image (1024² high quality) · ref images add input tokens',
+    pingMessage: 'Sending to OpenAI gpt-image-2 (high quality)...'
+  }
+};
+
+// Cache both keys in session memory so user can flip providers without re-pasting
+const keyCache = { gemini: '', openai: '' };
+
+function setProvider(provider) {
+  // Save current key to cache before switching
+  const currentKey = document.getElementById('apiKey').value.trim();
+  if (currentKey) keyCache[currentProvider] = currentKey;
+
+  currentProvider = provider;
+  const cfg = PROVIDER_CONFIG[provider];
+
+  document.getElementById('providerGemini').classList.toggle('active', provider === 'gemini');
+  document.getElementById('providerOpenai').classList.toggle('active', provider === 'openai');
+
+  document.getElementById('apiKeyLabel').textContent = cfg.keyLabel;
+  document.getElementById('apiKey').placeholder = cfg.keyPlaceholder;
+  document.getElementById('apiKey').value = keyCache[provider] || '';
+  document.getElementById('apiKeyDescription').innerHTML = cfg.keyDescription;
+  document.getElementById('providerCostNote').textContent = cfg.costNote;
+
+  saveSettings();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PERSISTENT SETTINGS
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const SETTINGS_KEY = 'atelier-settings-v1';
@@ -823,6 +938,7 @@ function saveSettings() {
   try {
     const settings = {
       version: ATELIER_VERSION,
+      provider: currentProvider,
       mode: currentMode,
       style: selectedStyle,
       method: selectedMethod,
@@ -861,7 +977,7 @@ function updateSettingsStatusText() {
 }
 
 function resetAllSettings() {
-  if (!confirm('Clear all saved preferences? Your API key was never saved. This will reset Atelier to defaults.')) return;
+  if (!confirm('Clear all saved preferences? Your API keys were never saved. This will reset Atelier to defaults.')) return;
   try {
     localStorage.removeItem(SETTINGS_KEY);
     setStatus('Settings cleared. Reload the page to see defaults.', 'info');
@@ -874,31 +990,23 @@ function resetAllSettings() {
 function applySettings(settings) {
   if (!settings) return;
   try {
-    // Mode
+    if (settings.provider && PROVIDER_CONFIG[settings.provider]) {
+      setProvider(settings.provider);
+    }
     if (settings.mode === 'upscale') setMode('upscale');
-
-    // Style
     if (settings.style && styleMap[settings.style]) {
       selectedStyle = settings.style;
       document.querySelectorAll('.preset-btn').forEach(b =>
         b.classList.toggle('active', b.dataset.style === settings.style));
     }
-
-    // Method
     if (settings.method) setMethod(settings.method);
-
-    // DPI
     if (settings.dpi && [150,240,300,340].includes(settings.dpi)) {
       selectedDPI = settings.dpi;
       document.querySelectorAll('.dpi-btn').forEach(b =>
         b.classList.toggle('active', parseInt(b.dataset.dpi) === settings.dpi));
     }
-
-    // Dimensions
     if (settings.widthIn) document.getElementById('widthIn').value = settings.widthIn;
     if (settings.heightIn) document.getElementById('heightIn').value = settings.heightIn;
-
-    // Aspect lock
     if (settings.aspectLocked) {
       aspectLocked = true;
       const w = parseFloat(document.getElementById('widthIn').value) || 8;
@@ -906,8 +1014,6 @@ function applySettings(settings) {
       lockedAspectRatio = w / h;
       updateAspectLockUI();
     }
-
-    // Signature
     if (settings.signature) {
       const sig = settings.signature;
       if (sig.enabled) {
@@ -929,7 +1035,6 @@ function applySettings(settings) {
         document.getElementById('sigColorMode').value = sig.colorMode;
       }
     }
-
     updateHint();
     updateDpiSmartHint();
     updateSettingsStatusText();
@@ -940,11 +1045,9 @@ function applySettings(settings) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// WAVE 1 — PNG METADATA EMBEDDING (tEXt chunks)
-// Pure JS, no dependencies. Embeds prompt, model, settings into the file itself.
+// PNG METADATA EMBEDDING (tEXt chunks)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// CRC32 table for PNG chunk integrity
 const CRC_TABLE = (() => {
   const table = new Uint32Array(256);
   for (let n = 0; n < 256; n++) {
@@ -963,16 +1066,9 @@ function crc32(bytes) {
   return (crc ^ 0xffffffff) >>> 0;
 }
 
-/**
- * Insert tEXt metadata chunks into a PNG blob, returning a new blob.
- * Each entry must be { keyword: string, text: string }.
- * Keywords must be 1-79 chars, Latin-1, no null bytes.
- */
 async function embedPngMetadata(blob, entries) {
   try {
     const buf = new Uint8Array(await blob.arrayBuffer());
-
-    // PNG signature: 8 bytes
     const sig = [0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a];
     for (let i = 0; i < 8; i++) {
       if (buf[i] !== sig[i]) {
@@ -980,29 +1076,23 @@ async function embedPngMetadata(blob, entries) {
         return blob;
       }
     }
-
-    // Build tEXt chunks
     const chunks = [];
     for (const entry of entries) {
       const kw = entry.keyword.replace(/[^\x20-\x7e]/g, '').slice(0, 79);
       const txt = String(entry.text);
-      // Encode text as UTF-8 — strictly tEXt is Latin-1, but viewers tolerate UTF-8
       const txtBytes = new TextEncoder().encode(txt);
       const kwBytes = new TextEncoder().encode(kw);
       const data = new Uint8Array(kwBytes.length + 1 + txtBytes.length);
       data.set(kwBytes, 0);
-      data[kwBytes.length] = 0; // null separator
+      data[kwBytes.length] = 0;
       data.set(txtBytes, kwBytes.length + 1);
-
-      // Chunk: length(4) + type(4) + data + crc(4)
-      const type = new Uint8Array([0x74, 0x45, 0x58, 0x74]); // "tEXt"
+      const type = new Uint8Array([0x74, 0x45, 0x58, 0x74]);
       const lenBuf = new Uint8Array(4);
       const len = data.length;
       lenBuf[0] = (len >>> 24) & 0xff;
       lenBuf[1] = (len >>> 16) & 0xff;
       lenBuf[2] = (len >>>  8) & 0xff;
       lenBuf[3] =  len         & 0xff;
-
       const crcInput = new Uint8Array(type.length + data.length);
       crcInput.set(type, 0);
       crcInput.set(data, type.length);
@@ -1012,7 +1102,6 @@ async function embedPngMetadata(blob, entries) {
       crcBuf[1] = (crc >>> 16) & 0xff;
       crcBuf[2] = (crc >>>  8) & 0xff;
       crcBuf[3] =  crc         & 0xff;
-
       const chunk = new Uint8Array(lenBuf.length + type.length + data.length + crcBuf.length);
       chunk.set(lenBuf, 0);
       chunk.set(type, 4);
@@ -1020,10 +1109,6 @@ async function embedPngMetadata(blob, entries) {
       chunk.set(crcBuf, 8 + data.length);
       chunks.push(chunk);
     }
-
-    // Find IHDR end (first chunk after PNG signature) and insert tEXt chunks after it.
-    // IHDR: starts at byte 8, length(4) + "IHDR"(4) + data(13) + crc(4) = 25 bytes
-    // So insertion point is byte 33.
     const insertAt = 33;
     const totalNewSize = buf.length + chunks.reduce((s,c) => s + c.length, 0);
     const out = new Uint8Array(totalNewSize);
@@ -1034,7 +1119,6 @@ async function embedPngMetadata(blob, entries) {
       cursor += chunk.length;
     }
     out.set(buf.subarray(insertAt), cursor);
-
     return new Blob([out], { type: 'image/png' });
   } catch(e) {
     console.warn('[Atelier] Metadata embed failed, returning original:', e);
@@ -1043,7 +1127,7 @@ async function embedPngMetadata(blob, entries) {
 }
 
 function buildMetadataEntries(opts) {
-  const { mode, prompt, model, widthIn, heightIn, dpi, style, method, sigEnabled, sigPosition, refUsed } = opts;
+  const { mode, prompt, provider, model, widthIn, heightIn, dpi, style, method, sigEnabled, sigPosition, refUsed } = opts;
   const entries = [
     { keyword: 'Software',       text: `Atelier Giclée Print Studio v${ATELIER_VERSION}` },
     { keyword: 'Title',          text: `Atelier ${mode === 'generate' ? 'Generated' : 'Upscaled'} Print` },
@@ -1052,6 +1136,7 @@ function buildMetadataEntries(opts) {
     { keyword: 'Atelier-DPI',    text: String(dpi) },
     { keyword: 'Atelier-PrintSize', text: `${widthIn}x${heightIn} inches` },
   ];
+  if (provider)     entries.push({ keyword: 'Atelier-Provider',  text: provider });
   if (model)        entries.push({ keyword: 'Atelier-Model',     text: model });
   if (style)        entries.push({ keyword: 'Atelier-Style',     text: style });
   if (method)       entries.push({ keyword: 'Atelier-Method',    text: method });
@@ -1065,7 +1150,6 @@ function buildMetadataEntries(opts) {
     entries.push({ keyword: 'Description', text: prompt });
     entries.push({ keyword: 'Atelier-Prompt', text: prompt });
   }
-  // Numivas-AI provenance string per Karl's standard
   entries.push({
     keyword: 'Atelier-Provenance',
     text: 'Each piece is an original work created through a collaborative process — human numismatic expertise and historical research directing AI-assisted rendering. Conceived, curated, and approved by the artist. The AI is the brush. The knowledge is human.'
@@ -1074,7 +1158,7 @@ function buildMetadataEntries(opts) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SIGNATURE COMPOSITING — Numivas-AI branded signature
+// SIGNATURE COMPOSITING
 // ═══════════════════════════════════════════════════════════════════════════════
 
 let signatureEnabled = false;
@@ -1103,7 +1187,6 @@ function detectBackgroundVariant(canvas, x, y, w, h) {
   const sy = Math.max(0, Math.min(canvas.height - 1, Math.floor(y)));
   const sw = Math.max(1, Math.min(canvas.width  - sx, Math.floor(w)));
   const sh = Math.max(1, Math.min(canvas.height - sy, Math.floor(h)));
-
   const pixels = ctx.getImageData(sx, sy, sw, sh).data;
   let total = 0, count = 0;
   for (let i = 0; i < pixels.length; i += 16) {
@@ -1113,7 +1196,6 @@ function detectBackgroundVariant(canvas, x, y, w, h) {
   }
   const avgLum = total / count;
   console.log(`[Atelier Sig] Background luminance: ${avgLum.toFixed(3)}`);
-
   if (avgLum > 0.65) return 'sepia';
   if (avgLum < 0.30) return 'gold';
   return 'umber';
@@ -1121,48 +1203,28 @@ function detectBackgroundVariant(canvas, x, y, w, h) {
 
 async function compositeSignature(canvas, dpi) {
   if (!signatureEnabled) return canvas;
-
   const sigWidthPx  = Math.round(1.25 * dpi);
   const sigHeightPx = Math.round(sigWidthPx * (240 / 600));
   const padPx = Math.round(0.35 * dpi);
-
   let x, y;
   switch (signaturePosition) {
-    case 'bottom-left':
-      x = padPx;
-      y = canvas.height - sigHeightPx - padPx;
-      break;
-    case 'top-right':
-      x = canvas.width - sigWidthPx - padPx;
-      y = padPx;
-      break;
-    case 'top-left':
-      x = padPx;
-      y = padPx;
-      break;
+    case 'bottom-left':  x = padPx; y = canvas.height - sigHeightPx - padPx; break;
+    case 'top-right':    x = canvas.width - sigWidthPx - padPx; y = padPx; break;
+    case 'top-left':     x = padPx; y = padPx; break;
     case 'bottom-right':
-    default:
-      x = canvas.width - sigWidthPx - padPx;
-      y = canvas.height - sigHeightPx - padPx;
+    default:             x = canvas.width - sigWidthPx - padPx; y = canvas.height - sigHeightPx - padPx;
   }
-
   let variant = signatureColorMode;
-  if (variant === 'auto') {
-    variant = detectBackgroundVariant(canvas, x, y, sigWidthPx, sigHeightPx);
-  }
-  console.log(`[Atelier Sig] Using variant: ${variant} at position: ${signaturePosition}, coords: ${x},${y} size: ${sigWidthPx}x${sigHeightPx}, canvas: ${canvas.width}x${canvas.height}`);
-
+  if (variant === 'auto') variant = detectBackgroundVariant(canvas, x, y, sigWidthPx, sigHeightPx);
+  console.log(`[Atelier Sig] Using variant: ${variant} at ${signaturePosition}`);
   const sigImg = await loadSignatureImage(variant);
-  console.log(`[Atelier Sig] Image loaded: ${sigImg.width}x${sigImg.height}`);
-
   const ctx = canvas.getContext('2d');
   ctx.save();
   ctx.globalAlpha = signatureOpacity;
   ctx.globalCompositeOperation = 'screen';
   ctx.drawImage(sigImg, x, y, sigWidthPx, sigHeightPx);
   ctx.restore();
-  ctx.getImageData(x, y, 1, 1); // flush
-
+  ctx.getImageData(x, y, 1, 1);
   return canvas;
 }
 
@@ -1196,50 +1258,40 @@ let srcImageType   = null;
 let lastPrompt    = '';
 let lastImageData = null;
 let lastModelUsed = '';
+let lastProviderUsed = '';
 
 let lastSourceW = 0;
 let lastSourceH = 0;
 
-// WAVE 1: Aspect ratio lock state
 let aspectLocked = false;
-let lockedAspectRatio = null; // width/height
-let aspectLockSyncing = false; // prevent infinite loops
+let lockedAspectRatio = null;
+let aspectLockSyncing = false;
 
 // ─── Mode switching ───────────────────────────────────────────────────────────
 function setMode(mode) {
   currentMode = mode;
-
   document.getElementById('modeGenerate').classList.toggle('active', mode === 'generate');
   document.getElementById('modeUpscale').classList.toggle('active',  mode === 'upscale');
-
   const generateSections = ['secStyles', 'secReference', 'secDescription'];
   const upscaleSections  = ['secUploadSource', 'secMethod'];
-
   generateSections.forEach(id => document.getElementById(id).classList.toggle('hidden', mode !== 'generate'));
   upscaleSections.forEach(id  => document.getElementById(id).classList.toggle('hidden', mode !== 'upscale'));
-
   document.getElementById('apiKeyNote').style.display    = mode === 'upscale' ? 'inline' : 'none';
   document.getElementById('copyPromptBtn').style.display = mode === 'generate' ? '' : 'none';
-
   document.getElementById('generateBtn').textContent =
     mode === 'generate' ? 'Generate Giclée Print' : 'Upscale to Print Resolution';
-
   document.getElementById('emptySubText').textContent =
     mode === 'generate' ? 'Configure & Generate to Render' : 'Drop a painting & upscale to print resolution';
-
   saveSettings();
 }
 
-// ─── Upscale method ───────────────────────────────────────────────────────────
 function setMethod(method) {
   selectedMethod = method;
   document.querySelectorAll('.method-btn').forEach(b =>
     b.classList.toggle('active', b.dataset.method === method));
-
   document.getElementById('methodNote').textContent = method === 'faithful'
     ? 'Your painting is scaled to the exact target resolution with progressive multi-step upscaling and sharpening between each pass. Color, composition, and every brushstroke are preserved exactly as photographed.'
-    : 'Gemini analyzes your painting and reconstructs fine brushwork detail, sharpens edges, and improves tonal range — then scales to print resolution with progressive upscaling. Requires API key.';
-
+    : 'AI analyzes your painting and reconstructs fine brushwork detail, sharpens edges, and improves tonal range — then scales to print resolution with progressive upscaling. Requires API key.';
   saveSettings();
 }
 
@@ -1278,7 +1330,6 @@ function updateDpiSmartHint() {
   }
 }
 
-// ─── Style selector ───────────────────────────────────────────────────────────
 document.querySelectorAll('.preset-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
@@ -1288,7 +1339,6 @@ document.querySelectorAll('.preset-btn').forEach(btn => {
   });
 });
 
-// ─── Signature position selector ──────────────────────────────────────────────
 document.querySelectorAll('.sig-pos-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.sig-pos-btn').forEach(b => b.classList.remove('active'));
@@ -1298,12 +1348,11 @@ document.querySelectorAll('.sig-pos-btn').forEach(btn => {
   });
 });
 
-// ─── WAVE 1: Print size presets ───────────────────────────────────────────────
 document.querySelectorAll('.size-preset-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const w = parseFloat(btn.dataset.w);
     const h = parseFloat(btn.dataset.h);
-    aspectLockSyncing = true; // don't trigger lock recalc during preset apply
+    aspectLockSyncing = true;
     document.getElementById('widthIn').value  = w;
     document.getElementById('heightIn').value = h;
     aspectLockSyncing = false;
@@ -1315,7 +1364,6 @@ document.querySelectorAll('.size-preset-btn').forEach(btn => {
   });
 });
 
-// ─── WAVE 1: Aspect ratio lock ────────────────────────────────────────────────
 function toggleAspectLock() {
   aspectLocked = !aspectLocked;
   if (aspectLocked) {
@@ -1344,7 +1392,6 @@ function updateAspectLockUI() {
   }
 }
 
-// ─── Pixel hint + dimension change handling ──────────────────────────────────
 function updateHint() {
   const w  = parseFloat(document.getElementById('widthIn').value)  || 0;
   const h  = parseFloat(document.getElementById('heightIn').value) || 0;
@@ -1353,8 +1400,6 @@ function updateHint() {
   const mb = ((pw * ph * 3) / (1024 * 1024)).toFixed(1);
   document.getElementById('pixelDimHint').textContent =
     `${pw.toLocaleString()} × ${ph.toLocaleString()} px · ~${mb} MB uncompressed`;
-
-  // Highlight matching preset, if any
   const matched = Array.from(document.querySelectorAll('.size-preset-btn')).find(b =>
     parseFloat(b.dataset.w) === w && parseFloat(b.dataset.h) === h);
   document.querySelectorAll('.size-preset-btn').forEach(b => b.classList.remove('active'));
@@ -1387,7 +1432,6 @@ document.getElementById('heightIn').addEventListener('input', () => {
   saveSettings();
 });
 
-// ─── Char counter ─────────────────────────────────────────────────────────────
 document.getElementById('paintDesc').addEventListener('input', function() {
   document.getElementById('charCount').textContent = `${this.value.length} / 2500`;
 });
@@ -1413,7 +1457,6 @@ document.getElementById('imageUpload').addEventListener('change', function(e) {
   reader.readAsDataURL(file);
 });
 
-// ─── Source painting upload (upscale) ────────────────────────────────────────
 document.getElementById('imageUploadSource').addEventListener('change', function(e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -1433,15 +1476,27 @@ document.getElementById('imageUploadSource').addEventListener('change', function
 });
 
 // ─── Status helpers ───────────────────────────────────────────────────────────
-function setStatus(msg, type = 'info') {
+function setStatus(msg, type = 'info', allowSwitchProvider = false) {
   const bar = document.getElementById('statusBar');
-  bar.textContent = msg;
+  let html = msg;
+  if (allowSwitchProvider && type === 'error') {
+    const otherProvider = currentProvider === 'gemini' ? 'openai' : 'gemini';
+    const otherLabel = PROVIDER_CONFIG[otherProvider].label;
+    html += `<button class="switch-provider-btn" onclick="switchProviderAndRetry('${otherProvider}')">Try ${otherLabel}</button>`;
+  }
+  bar.innerHTML = html;
   bar.className   = `status-bar ${type}`;
 }
 function clearStatus() { document.getElementById('statusBar').className = 'status-bar'; }
 function setLoadingStatus(msg) {
   const el = document.getElementById('loadingStatus');
   if (el) el.textContent = msg;
+}
+
+function switchProviderAndRetry(provider) {
+  setProvider(provider);
+  clearStatus();
+  setStatus(`Switched to ${PROVIDER_CONFIG[provider].label}. Click Generate again.`, 'info');
 }
 
 // ─── Style map ────────────────────────────────────────────────────────────────
@@ -1464,7 +1519,7 @@ function buildPrompt(userDesc, style, widthIn, heightIn) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// OUTPUT PIPELINE — Progressive upscale, lossless, no compression
+// OUTPUT PIPELINE — Progressive upscale, lossless
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function decodeBase64ToImage(base64, mimeType) {
@@ -1473,7 +1528,6 @@ function decodeBase64ToImage(base64, mimeType) {
     const bytes  = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
     const blob = new Blob([bytes], { type: mimeType || 'image/png' });
-
     if (typeof createImageBitmap === 'function') {
       createImageBitmap(blob).then(resolve).catch(() => {
         const img = new Image();
@@ -1561,25 +1615,19 @@ function upscaleStep(source, targetW, targetH, sharpenAmount = 0.5) {
 function progressiveUpscale(source, targetW, targetH, onStep) {
   const srcW = source.width || source.naturalWidth;
   const srcH = source.height || source.naturalHeight;
-
   if (targetW <= srcW && targetH <= srcH) {
     const canvas = upscaleStep(source, targetW, targetH, 0.3);
     return { canvas, steps: 1 };
   }
-
   const MAX_STEP_RATIO = 1.8;
   const totalRatio = Math.max(targetW / srcW, targetH / srcH);
   const numSteps   = Math.max(1, Math.ceil(Math.log(totalRatio) / Math.log(MAX_STEP_RATIO)));
-
   let current = source;
-
   for (let i = 0; i < numSteps; i++) {
     const isLast = (i === numSteps - 1);
     let stepW, stepH;
-    if (isLast) {
-      stepW = targetW;
-      stepH = targetH;
-    } else {
+    if (isLast) { stepW = targetW; stepH = targetH; }
+    else {
       const progress = (i + 1) / numSteps;
       stepW = Math.round(srcW * Math.pow(targetW / srcW, progress));
       stepH = Math.round(srcH * Math.pow(targetH / srcH, progress));
@@ -1588,7 +1636,6 @@ function progressiveUpscale(source, targetW, targetH, onStep) {
     const sharpness = isLast ? 0.4 : 0.55;
     current = upscaleStep(current, stepW, stepH, sharpness);
   }
-
   return { canvas: current, steps: numSteps };
 }
 
@@ -1604,37 +1651,38 @@ function canvasToLosslessPNG(canvas) {
 async function upscaleToGiclee(base64, mimeType, targetW, targetH) {
   setLoadingStatus('Decoding source image…');
   const source = await decodeBase64ToImage(base64, mimeType);
-
   const srcW = source.width || source.naturalWidth;
   const srcH = source.height || source.naturalHeight;
-
   lastSourceW = srcW;
   lastSourceH = srcH;
-
   console.log(`[Atelier] API source: ${srcW}×${srcH} → Target: ${targetW}×${targetH} (${selectedDPI} DPI)`);
-
   const { canvas, steps } = progressiveUpscale(source, targetW, targetH, (step, total, w, h) => {
     setLoadingStatus(`Upscale pass ${step}/${total} → ${w.toLocaleString()}×${h.toLocaleString()}px…`);
   });
-
   console.log(`[Atelier] Progressive upscale complete in ${steps} step(s)`);
-
   if (signatureEnabled) {
     setLoadingStatus('Applying Numivas—AI signature…');
     await compositeSignature(canvas, selectedDPI);
-    console.log(`[Atelier] Signature applied`);
   }
-
   setLoadingStatus('Exporting lossless PNG…');
-  let blob = await canvasToLosslessPNG(canvas);
-  console.log(`[Atelier] Output: ${targetW}×${targetH}, ${(blob.size / 1048576).toFixed(2)} MB PNG (lossless)`);
+  const blob = await canvasToLosslessPNG(canvas);
+  console.log(`[Atelier] Output: ${targetW}×${targetH}, ${(blob.size / 1048576).toFixed(2)} MB PNG`);
   return blob;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// API LAYER
+// API LAYER — Provider-agnostic dispatcher
 // ═══════════════════════════════════════════════════════════════════════════════
 
+async function fetchImage(prompt, imageBase64, imageMimeType, apiKey) {
+  if (currentProvider === 'openai') {
+    return await fetchOpenAIImage(prompt, imageBase64, imageMimeType, apiKey);
+  } else {
+    return await fetchGeminiImage(prompt, imageBase64, imageMimeType, apiKey);
+  }
+}
+
+// ─── Gemini ───────────────────────────────────────────────────────────────────
 async function fetchGeminiImage(prompt, imageBase64, imageMimeType, apiKey) {
   const parts = [];
   if (imageBase64 && imageMimeType) {
@@ -1643,8 +1691,8 @@ async function fetchGeminiImage(prompt, imageBase64, imageMimeType, apiKey) {
   parts.push({ text: prompt });
 
   const models = [
-    'gemini-3-pro-image-preview',      // Nano Banana Pro — flagship, best for fine art reference work
-    'gemini-3.1-flash-image-preview'   // Nano Banana 2 — fast fallback if Pro is unavailable
+    'gemini-3-pro-image-preview',
+    'gemini-3.1-flash-image-preview'
   ];
 
   for (const model of models) {
@@ -1669,24 +1717,109 @@ async function fetchGeminiImage(prompt, imageBase64, imageMimeType, apiKey) {
         if (imgPart) {
           console.log(`[Atelier] ${model} success — format: ${imgPart.inlineData.mimeType}`);
           lastModelUsed = model;
+          lastProviderUsed = 'gemini';
           return { data: imgPart.inlineData.data, mimeType: imgPart.inlineData.mimeType, model };
         }
-        console.warn(`[Atelier] ${model} returned no image part`, JSON.stringify(data).slice(0, 300));
         continue;
       }
 
       const errBody = await res.json().catch(() => ({}));
       const errMsg  = errBody?.error?.message || `HTTP ${res.status}`;
       console.warn(`[Atelier] ${model} failed (${res.status}): ${errMsg}`);
-      if (res.status === 401) throw new Error('Invalid API key — check your key at aistudio.google.com');
+      if (res.status === 401) throw new Error('Invalid Gemini API key — check your key at aistudio.google.com');
 
     } catch(e) {
-      if (e.message && e.message.startsWith('Invalid API key')) throw e;
+      if (e.message && e.message.startsWith('Invalid Gemini API key')) throw e;
       console.warn(`[Atelier] ${model} error:`, e.message);
     }
   }
 
-  throw new Error('All image models failed. Verify your key has billing enabled at aistudio.google.com');
+  throw new Error('All Gemini models failed (likely 503 timeout). Try OpenAI provider instead.');
+}
+
+// ─── OpenAI gpt-image-2 ───────────────────────────────────────────────────────
+async function fetchOpenAIImage(prompt, imageBase64, imageMimeType, apiKey) {
+  // Two endpoints: text-only uses /generations, with-reference uses /edits
+  // Both return base64 data when response_format=b64_json
+  const model = 'gpt-image-2';
+
+  if (imageBase64 && imageMimeType) {
+    // Edits endpoint with reference image — uses multipart/form-data
+    setLoadingStatus(`Sending to ${model} (edit with reference)...`);
+    const formData = new FormData();
+    formData.append('model', model);
+    formData.append('prompt', prompt);
+    formData.append('size', '1024x1024');
+    formData.append('quality', 'high');
+    formData.append('n', '1');
+
+    // Convert base64 to a Blob for upload
+    const binary = atob(imageBase64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const imgBlob = new Blob([bytes], { type: imageMimeType });
+    formData.append('image', imgBlob, 'reference.png');
+
+    const res = await fetch('https://api.openai.com/v1/images/edits', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}` },
+      body: formData
+    });
+
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      const errMsg = errBody?.error?.message || `HTTP ${res.status}`;
+      console.warn(`[Atelier] OpenAI edits failed (${res.status}): ${errMsg}`);
+      if (res.status === 401) throw new Error('Invalid OpenAI API key — check your key at platform.openai.com');
+      if (res.status === 403) throw new Error('OpenAI access denied — verify your organization at platform.openai.com → Settings → Organization');
+      throw new Error(`OpenAI error: ${errMsg}`);
+    }
+
+    const data = await res.json();
+    const b64 = data?.data?.[0]?.b64_json;
+    if (!b64) throw new Error('OpenAI returned no image data');
+
+    console.log(`[Atelier] ${model} (edits) success`);
+    lastModelUsed = model;
+    lastProviderUsed = 'openai';
+    return { data: b64, mimeType: 'image/png', model };
+
+  } else {
+    // Generations endpoint — text-only
+    setLoadingStatus(`Sending to ${model} (text-to-image)...`);
+    const res = await fetch('https://api.openai.com/v1/images/generations', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: model,
+        prompt: prompt,
+        size: '1024x1024',
+        quality: 'high',
+        n: 1
+      })
+    });
+
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      const errMsg = errBody?.error?.message || `HTTP ${res.status}`;
+      console.warn(`[Atelier] OpenAI generations failed (${res.status}): ${errMsg}`);
+      if (res.status === 401) throw new Error('Invalid OpenAI API key — check your key at platform.openai.com');
+      if (res.status === 403) throw new Error('OpenAI access denied — verify your organization at platform.openai.com → Settings → Organization');
+      throw new Error(`OpenAI error: ${errMsg}`);
+    }
+
+    const data = await res.json();
+    const b64 = data?.data?.[0]?.b64_json;
+    if (!b64) throw new Error('OpenAI returned no image data');
+
+    console.log(`[Atelier] ${model} (generations) success`);
+    lastModelUsed = model;
+    lastProviderUsed = 'openai';
+    return { data: b64, mimeType: 'image/png', model };
+  }
 }
 
 // ─── Main dispatcher ──────────────────────────────────────────────────────────
@@ -1699,7 +1832,7 @@ function handleAction() {
 async function runGenerate() {
   clearStatus();
   const apiKey = document.getElementById('apiKey').value.trim();
-  if (!apiKey) { setStatus('Please enter your Google AI API key.', 'error'); return; }
+  if (!apiKey) { setStatus(`Please enter your ${PROVIDER_CONFIG[currentProvider].keyLabel}.`, 'error'); return; }
   const desc = document.getElementById('paintDesc').value.trim();
   if (!desc && !refImageBase64) { setStatus('Please describe your painting — or drop a reference image.', 'error'); return; }
   const widthIn  = parseFloat(document.getElementById('widthIn').value);
@@ -1725,12 +1858,11 @@ async function runGenerate() {
     lastPrompt = fullPrompt;
 
     let result;
-
     if (refImageBase64) {
       const paintPrompt = `Using this image as your composition and subject reference, create: ${fullPrompt}. Interpret it faithfully in the specified painting style — do not simply reproduce the photograph, paint it as a fine art work.`;
-      result = await fetchGeminiImage(paintPrompt, refImageBase64, refImageType, apiKey);
+      result = await fetchImage(paintPrompt, refImageBase64, refImageType, apiKey);
     } else {
-      result = await fetchGeminiImage(fullPrompt, null, null, apiKey);
+      result = await fetchImage(fullPrompt, null, null, apiKey);
     }
 
     clearInterval(timer);
@@ -1738,11 +1870,11 @@ async function runGenerate() {
     setLoadingStatus(`Scaling to ${targetW.toLocaleString()}×${targetH.toLocaleString()}px @ ${selectedDPI} DPI…`);
     let finalBlob = await upscaleToGiclee(result.data, result.mimeType, targetW, targetH);
 
-    // WAVE 1: Embed metadata into the PNG
     setLoadingStatus('Embedding provenance metadata…');
     const meta = buildMetadataEntries({
       mode: 'generate',
       prompt: fullPrompt,
+      provider: lastProviderUsed,
       model: lastModelUsed,
       widthIn, heightIn,
       dpi: selectedDPI,
@@ -1752,14 +1884,14 @@ async function runGenerate() {
       refUsed: !!refImageBase64
     });
     finalBlob = await embedPngMetadata(finalBlob, meta);
-    console.log('[Atelier] Metadata embedded:', meta.length, 'entries');
 
     await showResult(finalBlob, widthIn, heightIn, targetW, targetH, 'Generated');
 
   } catch(err) {
     clearInterval(timer);
     hideLoading();
-    setStatus(`Error: ${err.message}`, 'error');
+    // Show "Try other provider" button on error
+    setStatus(`Error: ${err.message}`, 'error', true);
     console.error(err);
   }
 }
@@ -1780,12 +1912,11 @@ async function runUpscale() {
     showLoading('Upscaling your painting…');
     try {
       let blob = await upscaleToGiclee(srcImageBase64, srcImageType || 'image/png', targetW, targetH);
-
-      // WAVE 1: metadata embed
       setLoadingStatus('Embedding provenance metadata…');
       const meta = buildMetadataEntries({
         mode: 'upscale',
         prompt: '(Faithful upscale — no AI generation)',
+        provider: 'none',
         model: 'none-faithful',
         widthIn, heightIn,
         dpi: selectedDPI,
@@ -1794,13 +1925,12 @@ async function runUpscale() {
         sigPosition: signaturePosition
       });
       blob = await embedPngMetadata(blob, meta);
-
       await showResult(blob, widthIn, heightIn, targetW, targetH, 'Faithful Upscale');
     } catch(err) { hideLoading(); setStatus(`Error: ${err.message}`, 'error'); }
 
   } else {
     const apiKey = document.getElementById('apiKey').value.trim();
-    if (!apiKey) { setStatus('AI Enhanced upscale requires a Google AI API key.', 'error'); return; }
+    if (!apiKey) { setStatus(`AI Enhanced upscale requires a ${PROVIDER_CONFIG[currentProvider].keyLabel}.`, 'error'); return; }
 
     showLoading('Enhancing your painting with AI…');
     const steps = ['Analyzing brushwork…','Reconstructing fine detail…','Sharpening edges…','Improving tonal range…','Preserving artistic character…'];
@@ -1809,15 +1939,15 @@ async function runUpscale() {
 
     try {
       const enhancePrompt = `This is a photograph of an original fine art painting. Enhance it for archival giclée print reproduction: sharpen brushwork and paint texture, improve tonal depth and color richness, recover photographic detail loss — while faithfully preserving the exact composition, color palette, subject matter, and artistic character. Do not add new elements or change the style. Output the enhanced painting.`;
-      const enhanced = await fetchGeminiImage(enhancePrompt, srcImageBase64, srcImageType, apiKey);
+      const enhanced = await fetchImage(enhancePrompt, srcImageBase64, srcImageType, apiKey);
       clearInterval(timer);
       let blob = await upscaleToGiclee(enhanced.data, enhanced.mimeType, targetW, targetH);
 
-      // WAVE 1: metadata embed
       setLoadingStatus('Embedding provenance metadata…');
       const meta = buildMetadataEntries({
         mode: 'upscale',
         prompt: enhancePrompt,
+        provider: lastProviderUsed,
         model: lastModelUsed,
         widthIn, heightIn,
         dpi: selectedDPI,
@@ -1831,7 +1961,7 @@ async function runUpscale() {
     } catch(err) {
       clearInterval(timer);
       hideLoading();
-      setStatus(`Error: ${err.message}`, 'error');
+      setStatus(`Error: ${err.message}`, 'error', true);
       console.error(err);
     }
   }
@@ -1843,18 +1973,20 @@ function showResult(blob, widthIn, heightIn, targetW, targetH, label) {
     if (lastImageData) URL.revokeObjectURL(lastImageData);
     lastImageData = URL.createObjectURL(blob);
     const fileSizeMB = (blob.size / (1024*1024)).toFixed(2);
-
     const sourceRes = lastSourceW && lastSourceH
       ? `${lastSourceW.toLocaleString()} × ${lastSourceH.toLocaleString()}`
       : '—';
-
     const sigLabel = signatureEnabled ? ' · Signed' : '';
+    const providerLabel = lastProviderUsed === 'openai' ? 'OpenAI' :
+                          lastProviderUsed === 'gemini' ? 'Gemini' : '—';
 
     const img = document.getElementById('resultImg');
     img.onload = () => {
       hideLoading();
       document.getElementById('outputMeta').innerHTML = `
         <div class="meta-item"><span class="meta-label">Mode</span><span class="meta-value">${label}${sigLabel}</span></div>
+        <div class="meta-divider"></div>
+        <div class="meta-item"><span class="meta-label">Provider</span><span class="meta-value">${providerLabel}</span></div>
         <div class="meta-divider"></div>
         <div class="meta-item"><span class="meta-label">API Source</span><span class="meta-value" style="font-size:11px">${sourceRes} px</span></div>
         <div class="meta-divider"></div>
@@ -1869,7 +2001,7 @@ function showResult(blob, widthIn, heightIn, targetW, targetH, label) {
         <div class="meta-item"><span class="meta-label">Format</span><span class="meta-value">PNG · Lossless · Tagged</span></div>
       `;
       document.getElementById('resultWrapper').style.display = 'flex';
-      setStatus(`Ready — ${targetW.toLocaleString()}×${targetH.toLocaleString()}px · ${fileSizeMB} MB · ${selectedDPI} DPI · Lossless PNG with embedded metadata${sigLabel}`, 'success');
+      setStatus(`Ready — ${targetW.toLocaleString()}×${targetH.toLocaleString()}px · ${fileSizeMB} MB · ${selectedDPI} DPI · ${providerLabel}${sigLabel}`, 'success');
       resolve();
     };
     img.src = lastImageData;
@@ -1893,19 +2025,18 @@ function hideLoading() {
   }
 }
 
-// ─── Download print (lossless PNG with embedded metadata) ────────────────────
 function downloadPrint() {
   if (!lastImageData) return;
   const w = document.getElementById('widthIn').value;
   const h = document.getElementById('heightIn').value;
   const sigSuffix = signatureEnabled ? '-signed' : '';
+  const provSuffix = lastProviderUsed ? `-${lastProviderUsed}` : '';
   const a = document.createElement('a');
   a.href     = lastImageData;
-  a.download = `atelier-${currentMode}-${w}x${h}in-${selectedDPI}dpi${sigSuffix}-${Date.now()}.png`;
+  a.download = `atelier-${currentMode}${provSuffix}-${w}x${h}in-${selectedDPI}dpi${sigSuffix}-${Date.now()}.png`;
   a.click();
 }
 
-// ─── Save for web (intentional lossy JPEG for web use) ───────────────────────
 function saveForWeb() {
   if (!lastImageData) return;
   const src = document.getElementById('resultImg');
@@ -1914,14 +2045,12 @@ function saveForWeb() {
   let ow, oh;
   if (sw >= sh) { ow = Math.min(sw, MAX); oh = Math.round(ow * sh / sw); }
   else          { oh = Math.min(sh, MAX); ow = Math.round(oh * sw / sh); }
-
   const c = document.createElement('canvas');
   c.width = ow; c.height = oh;
   const ctx = c.getContext('2d');
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(src, 0, 0, ow, oh);
-
   c.toBlob(blob => {
     if (!blob) return;
     const kb  = (blob.size / 1024).toFixed(0);
@@ -1933,12 +2062,11 @@ function saveForWeb() {
     a.download = `atelier-web-${w}x${h}in-${ow}x${oh}px.jpg`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
-    setStatus(`Web export saved — ${ow}×${oh}px · ${kb} kB JPEG (lossy, web-optimized)`, 'success');
+    setStatus(`Web export saved — ${ow}×${oh}px · ${kb} kB JPEG`, 'success');
     setTimeout(clearStatus, 3000);
   }, 'image/jpeg', 0.88);
 }
 
-// ─── Copy prompt ──────────────────────────────────────────────────────────────
 function copyPromptUsed() {
   if (!lastPrompt) return;
   navigator.clipboard.writeText(lastPrompt).then(() => {
@@ -1947,7 +2075,6 @@ function copyPromptUsed() {
   });
 }
 
-// ─── Reset canvas ─────────────────────────────────────────────────────────────
 function resetCanvas() {
   document.getElementById('resultWrapper').style.display = 'none';
   document.getElementById('emptyState').style.display    = 'block';
@@ -1961,10 +2088,10 @@ function resetCanvas() {
 // INIT
 // ═══════════════════════════════════════════════════════════════════════════════
 setMode('generate');
+setProvider('gemini'); // default
 updateDpiSmartHint();
 updateHint();
 
-// WAVE 1: Restore persisted settings on load
 const savedSettings = loadSettings();
 if (savedSettings) {
   applySettings(savedSettings);
